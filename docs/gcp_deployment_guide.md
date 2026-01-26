@@ -26,10 +26,24 @@ Render よりも最初の読み込み（コールドスタート）が速く、�
     *   `DATABASE_URL`: 作成したデータベースの接続文字列
     *   `JWT_SECRET`: 適当な長い文字列
     *   `LINE_CHANNEL_SECRET` / `LINE_CHANNEL_ACCESS_TOKEN`: LINE のキー
+    *   `LINE_LOGIN_CHANNEL_ID` / `LINE_LOGIN_CHANNEL_SECRET`: LINEログインのキー
     *   `VITE_API_BASE`: `https://[Cloud RunのURL]` (一度デプロイしてURLが確定した後に設定・再デプロイしてください)
 6.  **認証**: 「未認証の呼び出しを許可」にチェック（誰でも予約画面にアクセスできるようにするため）。
 
-## 4. 運用とコスト
+## 4. デプロイ後の必須設定 (LINE連携)
+デプロイが完了して URL (例: `https://mspace-xxxxx.a.run.app`) が発行されたら、以下の設定を行ってください。
+
+1.  **LINE Developers 設定**:
+    - [LINE Developers コンソール](https://developers.line.biz/) にアクセス。
+    - **Messaging API設定** タブの **Webhook URL** に `https://[あなたのURL]/line/webhook` を入力して更新。
+    - **Webhookの利用** を **オン** にする。
+    - 「検証」ボタンを押して成功することを確認。
+    - **LINEログイン設定** タブの **コールバックURL** に `https://[あなたのURL]/api/auth/callback` を入力。
+
+2.  **環境変数の更新**:
+    - Cloud Run の変数 `VITE_API_BASE` に発行されたURLを設定して再デプロイ。
+
+## 5. 運用とコスト
 - **無料枠**: Cloud Run は毎月、一定のアクセス量まで無料です。個人の店舗レベルであれば、月額 0円〜数十円で収まる可能性が高いです。
 - **高速な起動**: Render Free のように 30秒待たされることはありません。1〜2秒で起動します。
 
