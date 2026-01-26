@@ -75,9 +75,11 @@ app.post(
   })
 );
 
-app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-  logger.error({ err }, "Unhandled error");
+app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+  console.error("Unhandled error:", err);
   if (err instanceof Error) {
+    console.error("Stack:", err.stack);
+    logger.error({ err, stack: err.stack, path: req.path, method: req.method }, "Unhandled error");
     if (err.message === "Party size is outside table capacity" || err.message === "Selected slot is unavailable") {
       res.status(400).json({ error: err.message });
       return;
