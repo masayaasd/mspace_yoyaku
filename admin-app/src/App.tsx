@@ -47,7 +47,7 @@ function App() {
     }
 
     return (
-        <BrowserRouter>
+        <BrowserRouter basename="/admin">
             <Layout onLogout={handleLogout} user={user}>
                 <Routes>
                     <Route path="/" element={<Dashboard />} />
