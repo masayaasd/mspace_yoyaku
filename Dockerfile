@@ -30,8 +30,8 @@ RUN npm run build
 FROM node:20-slim
 WORKDIR /app
 
-# Install openssl for Prisma
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+# Install OpenSSL and CA certificates for Prisma/Database connection
+RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Install production dependencies
 COPY package*.json ./
