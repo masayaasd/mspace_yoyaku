@@ -16,6 +16,7 @@ function parseDate(input: string) {
 }
 
 async function handleProvisionalBooking(event: MessageEvent) {
+  if (event.message.type !== "text") return;
   const requestedAt = parseDate(event.message.text.trim());
   if (!requestedAt) {
     await client.replyMessage(event.replyToken, {
@@ -84,6 +85,7 @@ async function handleConfirmationStep(
     tableIds: string[];
   }
 ) {
+  if (event.message.type !== "text") return;
   const payload = event.message.text.trim().split(/\s+/);
   try {
     const [choice, name, phone] = confirmationSchema.parse(payload);

@@ -35,7 +35,8 @@ router.get(
   asyncHandler(async (req, res) => {
     const parsed = availabilityQuerySchema.safeParse(req.query);
     if (!parsed.success) {
-      return res.status(400).json({ error: "Invalid parameters" });
+      res.status(400).json({ error: "Invalid parameters" });
+      return;
     }
 
     const { date, partySize } = parsed.data;
@@ -98,7 +99,8 @@ router.post(
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const parsed = bookingSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ error: "Invalid booking payload" });
+      res.status(400).json({ error: "Invalid booking payload" });
+      return;
     }
 
     const { tableId, startAt, endAt, partySize, name, phone } = parsed.data;
@@ -118,12 +120,14 @@ router.post(
       res.status(201).json({ reservation });
     } catch (error) {
       if (error instanceof Error && error.message.includes("unavailable")) {
-        return res.status(409).json({ error: "Slot already booked" });
+        res.status(409).json({ error: "Slot already booked" });
+        return;
       }
       if (error instanceof Error && error.message.includes("capacity")) {
-        return res.status(400).json({ error: error.message });
+        res.status(400).json({ error: error.message });
+        return;
       }
-      return res.status(500).json({ error: "Could not create reservation" });
+      res.status(500).json({ error: "Could not create reservation" });
     }
   })
 );
@@ -133,7 +137,8 @@ router.get(
   requireAuth,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user?.userLineId) {
-      return res.status(401).json({ error: "Unauthorized" });
+      res.status(401).json({ error: "Unauthorized" });
+      return;
     }
 
     const reservations = await reservationService.listUserReservations(req.user.userLineId);
