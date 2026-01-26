@@ -2,9 +2,23 @@
 import React from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { LayoutGrid, PlusCircle, UserCircle } from "lucide-react";
+import { useLIFF } from "../providers/LIFFProvider";
 
 export const Layout: React.FC = () => {
     const location = useLocation();
+    const { error } = useLIFF();
+
+    if (error) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-slate-50 px-6 text-center">
+                <div className="space-y-3">
+                    <p className="text-lg font-bold text-slate-800">初期化に失敗しました</p>
+                    <p className="text-sm text-slate-500">{error}</p>
+                    <p className="text-xs text-slate-400">VITE_LIFF_ID などの環境変数をご確認ください。</p>
+                </div>
+            </div>
+        );
+    }
 
     const tabs = [
         { path: "/", label: "マップ", icon: LayoutGrid },
