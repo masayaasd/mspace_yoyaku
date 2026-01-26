@@ -1,0 +1,18 @@
+(async () => {
+  try {
+    const { config } = await import("../src/config.js");
+    // ensure config is used so tree-shaking doesn't remove import
+    if (!config) {
+      throw new Error("Failed to load configuration");
+    }
+    console.log("ENV OK");
+  } catch (error) {
+    console.error("Environment configuration error:");
+    if (error instanceof Error) {
+      console.error(error.message);
+    } else {
+      console.error(error);
+    }
+    process.exit(1);
+  }
+})();

@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: poker-reserve
+    runtime: node
+    buildCommand: npm run build:full
+    startCommand: npm run start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_URL
+        fromDatabase:
+          name: poker-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        value: admin123
+      - key: VITE_API_BASE
+        value: https://poker-reserve.onrender.com # Change this after initial deploy
+      - key: VITE_LIFF_ID
+        sync: false
+    # Free tier note: Services will spin down after 15m of inactivity
+
+databases:
+  - name: poker-db
+    plan: free # Use Render's free PostgreSQL (expires in 90 days) or external like Supabase
