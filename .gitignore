@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.DS_Store
+*.db
+*.db-journal
+/admin-app/node_modules
+/admin-app/dist
+/liff-app/node_modules
+/liff-app/dist
+.git
