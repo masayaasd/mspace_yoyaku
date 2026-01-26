@@ -38,7 +38,7 @@ COPY package*.json ./
 RUN npm install --omit=dev
 
 # Copy built backend
-COPY --from=backend-builder /app/dist ./src
+COPY --from=backend-builder /app/dist ./dist
 COPY --from=backend-builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=backend-builder /app/prisma ./prisma
 
@@ -52,4 +52,4 @@ ENV PORT=8080
 EXPOSE 8080
 
 # Command to run the application (using compiled JS)
-CMD ["node", "src/index.js"]
+CMD ["node", "dist/index.js"]
