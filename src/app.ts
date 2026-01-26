@@ -39,6 +39,18 @@ const __dirname = path.dirname(__filename);
 
 // Admin App
 const adminDist = path.join(__dirname, "../admin-app/dist");
+console.log("Admin dist path:", adminDist);
+try {
+  const fs = await import("fs");
+  const adminFiles = fs.readdirSync(adminDist);
+  console.log("Admin dist contents:", adminFiles);
+  if (adminFiles.includes("assets")) {
+    const assetFiles = fs.readdirSync(path.join(adminDist, "assets"));
+    console.log("Admin assets contents:", assetFiles);
+  }
+} catch (e) {
+  console.error("Failed to read admin dist:", e);
+}
 app.use("/admin", express.static(adminDist));
 app.get("/admin/*", (_req, res) => {
   res.sendFile(path.join(adminDist, "index.html"));
