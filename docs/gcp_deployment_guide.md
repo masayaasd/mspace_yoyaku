@@ -27,7 +27,8 @@ Render よりも最初の読み込み（コールドスタート）が速く、�
     *   `JWT_SECRET`: 適当な長い文字列
     *   `LINE_CHANNEL_SECRET` / `LINE_CHANNEL_ACCESS_TOKEN`: LINE のキー
     *   `LINE_LOGIN_CHANNEL_ID` / `LINE_LOGIN_CHANNEL_SECRET`: LINEログインのキー
-    *   `VITE_API_BASE`: `https://[Cloud RunのURL]` (一度デプロイしてURLが確定した後に設定・再デプロイしてください)
+    *   `LINE_LOGIN_CHANNEL_ID` / `LINE_LOGIN_CHANNEL_SECRET`: LINEログインのキー
+    *   `VITE_API_BASE`: (任意) そのまま空欄でOKです。自動的に `/api` が使われます。
 6.  **認証**: 「未認証の呼び出しを許可」にチェック（誰でも予約画面にアクセスできるようにするため）。
 
 ## 4. デプロイ後の必須設定 (LINE連携)
@@ -40,8 +41,7 @@ Render よりも最初の読み込み（コールドスタート）が速く、�
     - 「検証」ボタンを押して成功することを確認。
     - **LINEログイン設定** タブの **コールバックURL** に `https://[あなたのURL]/api/auth/callback` を入力。
 
-2.  **環境変数の更新**:
-    - Cloud Run の変数 `VITE_API_BASE` に発行されたURLを設定して再デプロイ。
+    - **LINEログイン設定** タブの **コールバックURL** に `https://[あなたのURL]/api/auth/callback` を入力。
 
 ## 5. 運用とコスト
 - **無料枠**: Cloud Run は毎月、一定のアクセス量まで無料です。個人の店舗レベルであれば、月額 0円〜数十円で収まる可能性が高いです。
