@@ -40,7 +40,9 @@ const __dirname = path.dirname(__filename);
 
 // Admin App
 const adminDist = path.join(__dirname, "../admin-app/dist");
+const liffDist = path.join(__dirname, "../liff-app/dist");
 console.log("Admin dist path:", adminDist);
+console.log("LIFF dist path:", liffDist);
 try {
   const adminFiles = fs.readdirSync(adminDist);
   console.log("Admin dist contents:", adminFiles);
@@ -52,13 +54,18 @@ try {
   console.error("Failed to read admin dist:", e);
 }
 app.use("/admin", express.static(adminDist));
+app.use(express.static(liffDist));
 app.get("/admin/*", (_req, res) => {
   res.sendFile(path.join(adminDist, "index.html"));
 });
 
-// LIFF App (Customer App)
-const liffDist = path.join(__dirname, "../liff-app/dist");
-app.use("/", express.static(liffDist));
+// Routes
+app.use("/line", lineRouter);
+app.use("/api", adminRouter);
+app.use("/api/auth", authRouter);
+app.use("/api", customerRouter);
+
+// LIFF App Fallback
 app.get("*", (req, res, next) => {
   // If it starts with /api or /line, skip (already handled above)
   if (req.path.startsWith("/api") || req.path.startsWith("/line") || req.path.startsWith("/healthz")) {

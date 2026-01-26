@@ -31,6 +31,19 @@ Render よりも最初の読み込み（コールドスタート）が速く、�
     *   `VITE_API_BASE`: (任意) そのまま空欄でOKです。自動的に `/api` が使われます。
 6.  **認証**: 「未認証の呼び出しを許可」にチェック（誰でも予約画面にアクセスできるようにするため）。
 
+## (推奨) セキュリティの強化: Secret Manager の利用
+環境変数をそのまま設定するのではなく、より安全な **Secret Manager** を利用することをお勧めします。
+
+1.  Cloud Console で **Secret Manager** を検索・開く。
+2.  「シークレットを作成」で以下の機密情報を登録:
+    - `DATABASE_URL`
+    - `JWT_SECRET`
+    - `LINE_CHANNEL_SECRET`
+    - `LINE_LOGIN_CHANNEL_SECRET`
+3.  Cloud Run の「編集」画面で「変数とシークレット」タブを開く。
+4.  「シークレットを参照」ボタンから、登録したシークレットを環境変数として読み込む設定を行う（環境変数名は同じにする）。
+    - 例: 環境変数 `DATABASE_URL` の値として、Secret Manager の `DATABASE_URL` 最新バージョンを指定。
+
 ## 4. デプロイ後の必須設定 (LINE連携)
 デプロイが完了して URL (例: `https://mspace-xxxxx.a.run.app`) が発行されたら、以下の設定を行ってください。
 
