@@ -14,7 +14,13 @@ import { config } from "./config.js";
 
 export const app = express();
 
-app.use(express.json());
+app.use(
+  express.json({
+    verify: (req: Request, _res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 app.use(corsMiddleware);
 app.use(express.urlencoded({ extended: true }));
 

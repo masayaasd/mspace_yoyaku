@@ -15,7 +15,9 @@ router.post(
     const channelSecret = (await settingsService.getSetting("LINE_CHANNEL_SECRET")) || config.line.channelSecret;
     const signature = req.headers["x-line-signature"] as string;
 
-    if (!signature || !validateSignature(JSON.stringify(req.body), channelSecret, signature)) {
+    const body = req.rawBody ? req.rawBody.toString("utf-8") : JSON.stringify(req.body);
+
+    if (!signature || !validateSignature(body, channelSecret, signature)) {
       res.status(401).send("Invalid signature");
       return;
     }
