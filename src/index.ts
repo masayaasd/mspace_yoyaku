@@ -1,3 +1,4 @@
+console.log("Starting application...");
 import { app, startSchedulers } from "./app.js";
 import { config } from "./config.js";
 import { logger } from "./lib/logger.js";
@@ -17,6 +18,7 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
+  console.error("Critical error during startup:", err);
   logger.error({ err }, "Failed to start application");
   process.exit(1);
 });
