@@ -1,104 +1,38 @@
-# Google Cloud (GCP) 無料デプロイガイド
+# Google Cloud Run デプロイガイド
 
-Google Cloud Platform (GCP) の「承認済み無料枠」を利用して、24時間スリープなし（待ち時間なし）の予約サーバーを構築する手順です。
+Google Cloud Run (GCR) を利用して、低コストかつ高速な予約システムを公開する手順です。
+Render よりも最初の読み込み（コールドスタート）が速く、無料枠も非常に強力です。
 
-## 1. GCP インスタンスの作成 (Compute Engine)
-GCP の無料枠（Always Free）を適用するために、以下の設定を厳守してください。
+## 1. 準備するもの
+- **Google Cloud アカウント** (クレジットカード登録が必要ですが、無料枠内で収まります)
+- **GitHub リポジトリ** (ソースコードをアップロード済み)
+- **外部データベース (DATABASE_URL)** (Neon や Supabase で作成したもの)
 
-1.  **GCP コンソール** ([console.cloud.google.com](https://console.cloud.google.com/)) にログイン。
-2.  **Compute Engine** -> **VM インスタンス** -> **インスタンスを作成**。
-3.  **名前**: `poker-reserve` (任意)
-4.  **リージョン**: 以下のいずれかを必ず選択（無料枠対象）
-    *   `us-west1` (Oregon)
-    *   `us-central1` (Iowa)
-    *   `us-east1` (South Carolina)
-5.  **マシンタイプ**: `e2-micro` (2 vCPU, 1 GB メモリ) を選択。
-6.  **ブートディスク**: Ubuntu (22.04 LTS または 24.04) を選択。
-7.  **ファイアウォール**: 
-    *   `HTTP トラフィックを許可する` にチェック
-    *   `HTTPS トラフィックを許可する` にチェック
-8.  **作成** をクリック。
+## 2. Google Cloud の初期設定
+1. [Google Cloud Console](https://console.cloud.google.com/) にアクセス。
+2. 新しいプロジェクトを作成 (例: `poker-reserve-project`)。
+3. **Cloud Run API** を有効にします。
 
-## 2. サーバーの基本設定
-インスタンスができたら、`SSH` ボタンを押してターミナルを開きます。
+## 3. デプロイ手順（もっとも簡単な方法）
+サーバー上でコマンドを打つ必要はありません。Google Cloud の画面から設定できます。
 
-> [!IMPORTANT]
-> **注意**: コマンドをコピーする際、文頭の ` ```bash ` や `# (コメント)` は入力しないでください。
-> 以下の行を1行ずつコピーして貼り付け（Enter）してください。
+1.  **Cloud Run** 画面で「サービスを作成」をクリック。
+2.  「ソースリポジトリから継続的にデプロイする」を選択し、GitHub 連携を設定。
+3.  作成した GitHub リポジトリを選択。
+4.  **ビルド構成**:
+    *   ビルドタイプ: Docker
+    *   Dockerfile のパス: `Dockerfile` (プロジェクトルートにあるもの)
+5.  **環境変数 (変数とシークレット)** を設定：
+    *   `DATABASE_URL`: 作成したデータベースの接続文字列
+    *   `JWT_SECRET`: 適当な長い文字列
+    *   `LINE_CHANNEL_SECRET` / `LINE_CHANNEL_ACCESS_TOKEN`: LINE のキー
+    *   `VITE_API_BASE`: `https://[Cloud RunのURL]` (一度デプロイしてURLが確定した後に設定・再デプロイしてください)
+6.  **認証**: 「未認証の呼び出しを許可」にチェック（誰でも予約画面にアクセスできるようにするため）。
 
-### 手順 A: 基本ソフトのインストール
-```bash
-sudo apt update && sudo apt upgrade -y
-```
-(完了まで待ちます)
-
-```bash
-curl -fsSL https://fnm.vercel.app/install | bash
-```
-
-```bash
-source ~/.bashrc
-```
-
-```bash
-fnm install --lts
-```
-
-### 手順 B: プログラムの配置
-まだ GitHub にアップロードしていない場合は、まず [GitHub](https://github.com/) でプライベートリポジトリを作成し、あなたのPCからコードを Push する必要があります。
-
-GitHub にアップ済みの場合は、以下を実行してください：
-```bash
-git clone <あなたのリポジトリURL>
-```
-(例: `git clone https://github.com/user/line-yoyaku.git`)
-
-```bash
-cd LINEyoyaku
-```
-(フォルダ名はリポジトリ名に合わせてください)
-
-### 手順 C: 依存関係のインストール
-```bash
-npm install
-```
-
-## 3. 環境変数の設定
-`.env` ファイルを作成し、Neon で取得したデータベース URL などを設定します。
-
-```bash
-nano .env
-```
-以下の内容を貼り付け（あなたの値に書き換え）
-```env
-DATABASE_URL="postgresql://user:pass@host/db?sslmode=require"
-JWT_SECRET="適当な長い文字列"
-LINE_CHANNEL_SECRET="..."
-LINE_CHANNEL_ACCESS_TOKEN="..."
-LINE_LOGIN_CHANNEL_ID="..."
-LINE_LOGIN_CHANNEL_SECRET="..."
-```
-
-## 4. ビルドと起動
-```bash
-# 全体のビルド（管理画面とLINEアプリも含む）
-npm run build:full
-
-# PM2 で 24時間起動
-sudo npm install -g pm2
-pm2 start npm --name "poker-reserve" -- run start
-pm2 save
-pm2 startup
-```
-
-## 5. Nginx と SSL の設定
-外部から `https://...` でアクセスできるようにします。
-[vps_deployment_guide.md](./vps_deployment_guide.md) の **「4. Nginxの設定」** 以降の手順と同じです。
+## 4. 運用とコスト
+- **無料枠**: Cloud Run は毎月、一定のアクセス量まで無料です。個人の店舗レベルであれば、月額 0円〜数十円で収まる可能性が高いです。
+- **高速な起動**: Render Free のように 30秒待たされることはありません。1〜2秒で起動します。
 
 ---
 
-### メリット
-- **24時間稼働**: Render のようにスリープしません。お客様が LINE を開いた瞬間、すぐにマップが表示されます。
-- **完全無料**: `e2-micro` と 30GB までのディスクであれば、月額料金はかかりません。
-
-設定でわからないことがあれば、SSH 画面のスクリーンショットなどを添えて教えてください！
+この構成により、お客様を待たせることなく、プロフェッショナルな予約体験を提供できます。設定で詰まったら、画面のスクリーンショットなどを共有してください！
