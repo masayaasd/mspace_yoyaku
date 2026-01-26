@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import * as fs from "fs";
 import { fileURLToPath } from "url";
 import type { NextFunction, Request, Response } from "express";
 import asyncHandler from "express-async-handler";
@@ -41,7 +42,6 @@ const __dirname = path.dirname(__filename);
 const adminDist = path.join(__dirname, "../admin-app/dist");
 console.log("Admin dist path:", adminDist);
 try {
-  const fs = await import("fs");
   const adminFiles = fs.readdirSync(adminDist);
   console.log("Admin dist contents:", adminFiles);
   if (adminFiles.includes("assets")) {
