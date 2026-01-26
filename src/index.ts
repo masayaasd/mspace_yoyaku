@@ -10,7 +10,7 @@ async function bootstrap() {
   startSchedulers();
 
   const port = config.port;
-  app.listen(port, () => {
+  app.listen(port, "0.0.0.0", () => {
     console.log(`Server running on ${port}`);
     logger.info({ port }, "Server started");
   });
