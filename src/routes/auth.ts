@@ -59,6 +59,22 @@ router.post("/liff", async (req, res) => {
       "LIFF authentication failed"
     );
 
+    // Auto-Diagnosis for 401
+    let detailMessage = "Please check LINE_LOGIN_CHANNEL_ID configuration";
+    let backendId = loginChannelId ?? config.line.loginChannelId;
+
+    try {
+      const decoded = jwt.decode(idToken || "") as any;
+      if (decoded && decoded.aud) {
+        const frontendId = decoded.aud;
+        if (frontendId !== backendId) {
+          detailMessage = `ID Mismatch! App uses ${frontendId}, Backend expects ${backendId || "(Not Set)"}`;
+        }
+      }
+    } catch (e) {
+      // ignore decode error
+    }
+
     // Extract meaningful error message
     let errorMessage = "Authentication failed";
     if (axios.isAxiosError(error) && error.response?.data) {
@@ -70,9 +86,11 @@ router.post("/liff", async (req, res) => {
 
     return res.status(401).json({
       error: errorMessage,
-      detail: "Please check LINE_LOGIN_CHANNEL_ID configuration"
-    });
-  }
+      return res.status(401).json({
+        error: errorMessage,
+        detail: detailMessage
+      });
+    }
 });
 
 export const authRouter = router;

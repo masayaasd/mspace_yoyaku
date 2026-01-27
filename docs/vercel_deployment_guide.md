@@ -41,7 +41,10 @@
 1.  デプロイされた Admin App (`https://mspace-admin.vercel.app`) にアクセスします。
 2.  ログイン後、サイドメニューの「設定 (Settings)」を開きます。
 3.  **Webhook URL** は変更しなくてOKです (バックエンドの Cloud Run のURLのままが正解です)。
-4.  LINEの認証情報 (Channel Secretなど) を入力して「保存」を押します。
+4.  **LINE設定 (重要)**:
+    - **Messaging API**: Channel Secret と Access Token を入力。
+    - **LINE Login**: **Channel ID** に、LIFF IDのハイフンより前の数字 (例: `2008272520`) を必ず入力してください。 **(ここが間違っていると LIFF で 401エラー になります)**
+    - 保存を押します。
     - ※ バックエンドの改修により、ここで保存した設定が即座に反映されるようになっています。
 
 ## トラブルシューティング
