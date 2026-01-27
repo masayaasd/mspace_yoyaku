@@ -17,7 +17,7 @@ export const TimelineModal = ({ table, reservations, onClose, onReservationClick
     });
     const [loading, setLoading] = useState(false);
 
-    // Reset state when table changes (if modal reuses component, though it's conditional render)
+    // Reset state when table changes
     useEffect(() => {
         if (table) {
             setNewRes(prev => ({ ...prev, partySize: table.capacityMin }));
@@ -76,9 +76,10 @@ export const TimelineModal = ({ table, reservations, onClose, onReservationClick
             setLoading(false);
         }
     };
-    // Show 12:00 to 29:00 (next day 5:00)
+
+    // Show 12:00 to 30:00 (next day 6:00)
     const timelineStart = 12;
-    const timelineEnd = 30; // Until 6:00 next day
+    const timelineEnd = 30;
     const totalHours = timelineEnd - timelineStart;
 
     const modalRef = useRef<HTMLDivElement>(null);
@@ -96,9 +97,8 @@ export const TimelineModal = ({ table, reservations, onClose, onReservationClick
     const getPosition = (dateStr: string) => {
         const d = new Date(dateStr);
         let hours = d.getHours();
-        if (hours < 12) hours += 24; // Handle after midnight logic (simplified)
-        // Wait, if start is 12, then 0..11 are next day?
-        // Let's refine:
+
+        // Handle logic for "next day" hours in our timeline (e.g. 0-5 AM is 24-29)
         // If hour < timelineStart, assume it's next day (e.g. 1am < 12pm)
         if (hours < timelineStart) hours += 24;
 
@@ -111,42 +111,123 @@ export const TimelineModal = ({ table, reservations, onClose, onReservationClick
         return ((time - timelineStart) / totalHours) * 100;
     };
 
-    // ... (skip getDurationWidth, it uses getPosition so it logic holds)
+    const getDurationWidth = (startStr: string, endStr: string) => {
+        const start = getPosition(startStr);
+        const end = getPosition(endStr);
+        return Math.max(end - start, 1); // Minimum width
+    };
 
-    // ... (skip render, scroll down to select generation)
+    // Filter reservations for this table
+    const tableReservations = reservations
+        .filter((r: any) => r.tableId === table.id)
+        .sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
-    // ... INSIDE RENDER ...
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div ref={modalRef} className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                <div className="flex justify-between items-center p-4 border-b">
+                    <div>
+                        <h3 className="text-xl font-bold flex items-center gap-2">
+                            {table.name}
+                            <Badge color={table.isSmoking ? 'red' : 'green'}>{table.category}</Badge>
+                        </h3>
+                        <p className="text-sm text-slate-500">本日の予約スケジュール ({tableReservations.length}件)</p>
+                    </div>
+                    <Button variant="secondary" onClick={onClose}><X size={20} /></Button>
+                </div>
 
-    <option value="">開始時刻</option>
-    {
-        Array.from({ length: (totalHours * 2) }).map((_, i) => {
-            const h = Math.floor(i / 2) + timelineStart;
-            const m = i % 2 === 0 ? "00" : "30";
-            const displayH = h >= 24 ? h - 24 : h;
+                <div className="p-6 overflow-x-auto">
+                    {/* Time Scale */}
+                    <div className="relative h-12 border-b mb-4 min-w-[600px]">
+                        {Array.from({ length: totalHours + 1 }).map((_, i) => {
+                            const hour = timelineStart + i;
+                            const label = hour >= 24 ? `${hour - 24}:00` : `${hour}:00`;
+                            return (
+                                <div
+                                    key={hour}
+                                    className="absolute bottom-0 text-xs text-slate-400 border-l border-slate-200 h-2 pl-1"
+                                    style={{ left: `${(i / totalHours) * 100}%` }}
+                                >
+                                    {label}
+                                </div>
+                            );
+                        })}
+                    </div>
 
-            // Disable if occupied
-            // Calculate Date for this slot
-            const now = new Date();
-            const slotDate = new Date();
-            slotDate.setHours(displayH, m === "30" ? 30 : 0, 0, 0);
-            if (h >= 24) slotDate.setDate(slotDate.getDate() + 1); // fix date logic
+                    {/* Timeline Bar */}
+                    <div className="relative h-16 bg-slate-50 rounded-lg min-w-[600px] border">
+                        {tableReservations.map((res: any) => (
+                            <div
+                                key={res.id}
+                                className="absolute top-2 bottom-2 bg-blue-500 rounded-md shadow-sm text-white text-xs flex items-center px-2 overflow-hidden whitespace-nowrap cursor-pointer hover:bg-blue-600 transition-colors"
+                                style={{
+                                    left: `${getPosition(res.startTime)}%`,
+                                    width: `${getDurationWidth(res.startTime, res.endTime)}%`
+                                }}
+                                title={`${res.customerName}様 (${res.partySize}名)`}
+                                onClick={() => onReservationClick && onReservationClick(res)}
+                            >
+                                <span className="font-bold mr-1">{new Date(res.startTime).getHours()}:{String(new Date(res.startTime).getMinutes()).padStart(2, '0')}</span>
+                                {res.customerName}
+                            </div>
+                        ))}
 
-            // Check if this slot falls within any existing reservation
-            const isOccupied = tableReservations.some((r: any) => {
-                const rStart = new Date(r.startTime);
-                const rEnd = new Date(r.endTime);
-                // Occupied if: rStart <= slot < rEnd
-                return slotDate >= rStart && slotDate < rEnd;
-            });
+                        {tableReservations.length === 0 && (
+                            <div className="flex items-center justify-center h-full text-slate-400 text-sm italic">
+                                予約はありません
+                            </div>
+                        )}
+                    </div>
+                </div>
 
-            return (
-                <option key={i} value={`${displayH}:${m}`} disabled={isOccupied}>
-                    {displayH}:{m} {isOccupied ? '(予約済)' : ''}
-                </option>
-            );
-        })
-    }
-                            </select >
+                <div className="p-4 bg-slate-50 border-t flex justify-between items-center">
+                    {!showCreateForm ? (
+                        <Button variant="outline" onClick={() => setShowCreateForm(true)}>
+                            <Plus size={16} /> この卓で新規予約
+                        </Button>
+                    ) : (
+                        <Button variant="secondary" onClick={() => setShowCreateForm(false)}>キャンセル</Button>
+                    )}
+                    <Button variant="secondary" onClick={onClose}>閉じる</Button>
+                </div>
+
+                {showCreateForm && (
+                    <div className="p-4 bg-blue-50 border-t space-y-3 animate-in fade-in slide-in-from-bottom-2">
+                        <h4 className="font-bold text-blue-800 text-sm">簡易新規予約 (本日)</h4>
+                        <div className="grid grid-cols-3 gap-2">
+                            <select
+                                className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                value={newRes.time}
+                                onChange={(e: any) => setNewRes({ ...newRes, time: e.target.value, endTime: "" })}
+                            >
+                                <option value="">開始時刻</option>
+                                {Array.from({ length: (totalHours * 2) }).map((_, i) => {
+                                    const h = Math.floor(i / 2) + timelineStart;
+                                    const m = i % 2 === 0 ? "00" : "30";
+                                    const displayH = h >= 24 ? h - 24 : h;
+
+                                    // Disable if occupied
+                                    // Calculate Date for this slot
+                                    const now = new Date();
+                                    const slotDate = new Date();
+                                    slotDate.setHours(displayH, m === "30" ? 30 : 0, 0, 0);
+                                    if (h >= 24) slotDate.setDate(slotDate.getDate() + 1);
+
+                                    // Check if this slot falls within any existing reservation
+                                    const isOccupied = tableReservations.some((r: any) => {
+                                        const rStart = new Date(r.startTime);
+                                        const rEnd = new Date(r.endTime);
+                                        // Occupied if: rStart <= slot < rEnd
+                                        return slotDate >= rStart && slotDate < rEnd;
+                                    });
+
+                                    return (
+                                        <option key={i} value={`${displayH}:${m}`} disabled={isOccupied}>
+                                            {displayH}:{m} {isOccupied ? '(予約済)' : ''}
+                                        </option>
+                                    );
+                                })}
+                            </select>
                             <select
                                 className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 value={newRes.endTime}
@@ -213,7 +294,7 @@ export const TimelineModal = ({ table, reservations, onClose, onReservationClick
                                 onChange={(e: any) => setNewRes({ ...newRes, partySize: e.target.value })}
                                 icon={<User size={14} />}
                             />
-                        </div >
+                        </div>
                         <div className="grid grid-cols-2 gap-3">
                             <Input
                                 placeholder="お名前"
@@ -241,9 +322,9 @@ export const TimelineModal = ({ table, reservations, onClose, onReservationClick
                         <Button className="w-full" onClick={handleCreate} disabled={loading}>
                             {loading ? '作成中...' : '予約を確定する'}
                         </Button>
-                    </div >
+                    </div>
                 )}
-            </div >
-        </div >
+            </div>
+        </div>
     );
 };
