@@ -70,7 +70,7 @@ export const Dashboard = () => {
                     <p className="text-slate-500">本日の予約状況とステータスの概要です</p>
                 </div>
                 <div className="mb-2">
-                    <Link to="/reservations/new" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow-sm inline-flex items-center">
+                    <Link to="/reservations/new" className="bg-blue-600 hover:bg-blue-700 text-white !text-white px-4 py-2 rounded-lg font-bold shadow-sm inline-flex items-center">
                         ＋ 新規予約
                     </Link>
                 </div>
@@ -78,11 +78,31 @@ export const Dashboard = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
-                    title="本日の予約"
-                    value={stats.todayReservations}
-                    icon={<Calendar size={20} />}
+                    title="本日の予約 / 飛入"
+                    value={
+                        <div className="flex items-end gap-2">
+                            <span>
+                                {reservations.filter(r =>
+                                    !r.customerName.includes('飛入') && !r.customerName.includes('Walk-in') && r.status !== 'CANCELLED'
+                                ).length +
+                                    reservations.filter(r =>
+                                        (r.customerName.includes('飛入') || r.customerName.includes('Walk-in')) && r.status !== 'CANCELLED'
+                                    ).length}
+                            </span>
+                            <span className="text-sm font-normal text-slate-400 mb-1">
+                                (予約: {reservations.filter(r =>
+                                    !r.customerName.includes('飛入') && !r.customerName.includes('Walk-in') && r.status !== 'CANCELLED'
+                                ).length} /
+                                <span className="text-emerald-600 font-bold ml-1">
+                                    飛入: {reservations.filter(r =>
+                                        (r.customerName.includes('飛入') || r.customerName.includes('Walk-in')) && r.status !== 'CANCELLED'
+                                    ).length}
+                                </span>)
+                            </span>
+                        </div>
+                    }
+                    icon={<div className="flex"><Calendar size={20} className="text-blue-600" /><Users size={20} className="text-emerald-600 -ml-2" /></div>}
                     color="blue"
-                    trend="+12% vs昨日"
                 />
                 <StatCard
                     title="今月の累計"
@@ -137,9 +157,7 @@ export const Dashboard = () => {
 
                     {/* Timeline Section */}
                     <Card className="border-0 shadow-sm">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold">予約タイムライン (24H)</h3>
-                        </div>
+                        <h3 className="text-lg font-bold">予約タイムライン (24H)</h3>
                         <div className="overflow-hidden">
                             <TimelineBoard
                                 tables={tables}
@@ -190,7 +208,7 @@ export const Dashboard = () => {
                         )}
                     </div>
                 </Card>
-            </div>
+            </div >
             {selectedTable && (
                 <TimelineModal
                     table={selectedTable}
@@ -202,14 +220,16 @@ export const Dashboard = () => {
                     }}
                 />
             )}
-            {selectedReservation && (
-                <ReservationActionModal
-                    reservation={selectedReservation}
-                    reservations={reservations}
-                    onClose={() => setSelectedReservation(null)}
-                    onUpdate={fetchAll}
-                />
-            )}
+            {
+                selectedReservation && (
+                    <ReservationActionModal
+                        reservation={selectedReservation}
+                        reservations={reservations}
+                        onClose={() => setSelectedReservation(null)}
+                        onUpdate={fetchAll}
+                    />
+                )
+            }
         </div >
     );
 };

@@ -10,6 +10,7 @@ import { Tables } from "./pages/Tables";
 import { LineSettings } from "./pages/LineSettings";
 import { Templates } from "./pages/Templates";
 import { Customers } from "./pages/Customers";
+import { Analysis } from "./pages/Analysis";
 
 const apiBase = window.__ENV__?.VITE_API_BASE || import.meta.env.VITE_API_BASE || "/api";
 
@@ -57,6 +58,7 @@ function App() {
                     <Route path="/settings" element={<LineSettings />} />
                     <Route path="/templates" element={<Templates />} />
                     <Route path="/customers" element={<Customers />} />
+                    <Route path="/analysis" element={<Analysis />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </Layout>

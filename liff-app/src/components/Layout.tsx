@@ -31,7 +31,7 @@ export const Layout: React.FC = () => {
             {/* Header */}
             <header className="h-14 bg-white border-b flex items-center px-6 sticky top-0 z-40">
                 <h1 className="font-black text-xl text-slate-800 tracking-tight">
-                    POKER <span className="text-blue-600">RESERVE</span>
+                    MSPACE貸卓予約
                 </h1>
             </header>
 

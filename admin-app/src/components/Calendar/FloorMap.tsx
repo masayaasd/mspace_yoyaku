@@ -21,12 +21,12 @@ const TableNode = ({ table, reservationCount, style, label, status, reservations
             const s = new Date(activeRes.startTime);
             const e = new Date(activeRes.endTime);
             statusLabel = (
-                <div className="text-[10px] font-bold text-red-600 animate-pulse">
+                <div className="text-xs font-bold text-red-600 animate-pulse">
                     稼働中 ({s.getHours()}:{String(s.getMinutes()).padStart(2, '0')}-{e.getHours()}:{String(e.getMinutes()).padStart(2, '0')})
                 </div>
             );
         } else {
-            statusLabel = <div className="text-[10px] font-bold text-red-600">稼働中</div>;
+            statusLabel = <div className="text-xs font-bold text-red-600">稼働中</div>;
         }
     } else if (status === 'selected') {
         bgClass = 'bg-blue-600 border-blue-600 text-white';
@@ -64,7 +64,7 @@ const TableNode = ({ table, reservationCount, style, label, status, reservations
             }}
             title={`${table.name} (${table.capacityMin}-${table.capacityMax}名)`}
         >
-            <span className={`font-bold text-xs text-center px-1 ${status === 'selected' ? 'text-white' : 'text-slate-800'}`}>
+            <span className={`font-black text-sm text-center px-1 ${status === 'selected' ? 'text-white' : 'text-slate-800'}`}>
                 {label || table.name}
             </span>
 
@@ -108,38 +108,39 @@ export const FloorMap = ({ tables, reservations, onTableClick, tableStatus, comp
         reservations.filter((r: any) => r.tableId === tableId && r.status !== 'CANCELLED');
 
     // Ultra-Compact Map Layout (Realistic Image Based)
+    // Unified Node Layout (Expanded to reduce right whitespace)
     const nodes = [
         // --- Top Row ---
         // Left: 9名卓
-        { id: "T01", style: { top: "2%", left: "2%", width: "40%", height: "20%" }, label: compact ? "9名卓(T01)" : "9名卓" },
+        { id: "T01", style: { top: "2%", left: "2%", width: "47%", height: "20%" }, label: "9名卓(T01)" },
         // Right: 9名卓
-        { id: "T02", style: { top: "2%", left: "44%", width: "40%", height: "20%" }, label: compact ? "9名卓(T02)" : "9名卓" },
+        { id: "T02", style: { top: "2%", left: "51%", width: "47%", height: "20%" }, label: "9名卓(T02)" },
 
         // --- Middle Row ---
         // Left: 6名卓
-        { id: "T03", style: { top: "25%", left: "2%", width: "25%", height: "20%", borderRadius: "4px" }, label: compact ? "6名卓(T03)" : "6名卓" },
+        { id: "T03", style: { top: "25%", left: "2%", width: "29%", height: "20%", borderRadius: "4px" }, label: "6名卓(T03)" },
         // Center: 9名卓 (Vertical)
-        { id: "T04", style: { top: "24%", left: "30%", width: "25%", height: "35%", borderRadius: "4px" }, label: compact ? "9名卓(T04)" : "9名卓" },
+        { id: "T04", style: { top: "24%", left: "33%", width: "32%", height: "35%", borderRadius: "4px" }, label: "9名卓(T04)" },
         // Right: 6名卓
-        { id: "T05", style: { top: "25%", left: "58%", width: "25%", height: "20%", borderRadius: "4px" }, label: compact ? "6名卓(T05)" : "6名卓" },
+        { id: "T05", style: { top: "25%", left: "67%", width: "29%", height: "20%", borderRadius: "4px" }, label: "6名卓(T05)" },
 
         // --- Bottom Row ---
         // Left: 6名卓 (Smoking)
-        { id: "T06", style: { top: "50%", left: "2%", width: "25%", height: "20%", borderRadius: "4px" }, label: compact ? "6名卓(T06)" : "6名卓" },
+        { id: "T06", style: { top: "50%", left: "2%", width: "29%", height: "20%", borderRadius: "4px" }, label: "6名卓(T06)" },
 
         // T07 (Bottom Left Smoking):
-        { id: "T07", style: { top: "75%", left: "2%", width: "25%", height: "20%", borderRadius: "4px" }, label: compact ? "6名卓(T07)" : "6名卓" },
-        { id: "T07_Label", isLabel: true, style: { top: "96%", left: "2%", width: "25%", height: "5%", fontSize: "10px", color: "#333", textAlign: "center" as const }, label: "(喫煙)" },
+        { id: "T07", style: { top: "75%", left: "2%", width: "29%", height: "20%", borderRadius: "4px" }, label: "6名卓(T07)" },
+        { id: "T07_Label", isLabel: true, style: { top: "96%", left: "2%", width: "29%", height: "5%", fontSize: "11px", color: "#333", textAlign: "center" as const }, label: "(喫煙)" },
 
         // T08 (Bottom Center Smoking):
-        { id: "T08", style: { top: "75%", left: "30%", width: "25%", height: "20%", borderRadius: "4px" }, label: compact ? "4~6名(T08)" : "4~6名" },
-        { id: "T08_Label", isLabel: true, style: { top: "96%", left: "30%", width: "25%", height: "5%", fontSize: "10px", color: "#333", textAlign: "center" as const }, label: "(喫煙)" },
+        { id: "T08", style: { top: "75%", left: "33%", width: "30%", height: "20%", borderRadius: "4px" }, label: "4~6名" },
+        { id: "T08_Label", isLabel: true, style: { top: "96%", left: "33%", width: "30%", height: "5%", fontSize: "11px", color: "#333", textAlign: "center" as const }, label: "(喫煙)" },
 
         // Reception Node (Visual)
-        { id: "RECEPTION", style: { top: "62%", left: "30%", width: "25%", height: "15%", border: "2px solid #333", background: "#fff" }, label: "受付", isStatic: true },
+        { id: "RECEPTION", style: { top: "62%", left: "33%", width: "30%", height: "15%", border: "2px solid #333", background: "#fff" }, label: "受付", isStatic: true },
 
         // VIP (Right Side)
-        { id: "VIP", style: { top: "50%", left: "58%", width: "25%", height: "20%", borderRadius: "4px", border: "2px solid #000" }, label: "VIP" },
+        { id: "VIP", style: { top: "50%", left: "67%", width: "29%", height: "20%", borderRadius: "4px", border: "2px solid #000" }, label: "VIP" },
     ];
 
     return (
@@ -149,7 +150,7 @@ export const FloorMap = ({ tables, reservations, onTableClick, tableStatus, comp
             {nodes.map((node, idx) => {
                 if (node.isLabel) {
                     return (
-                        <div key={`label-${idx}`} className="absolute font-bold" style={node.style}>
+                        <div key={`label-${idx}`} className="absolute font-bold flex items-center justify-center" style={node.style}>
                             {node.label}
                         </div>
                     );
@@ -157,7 +158,7 @@ export const FloorMap = ({ tables, reservations, onTableClick, tableStatus, comp
 
                 if (node.isStatic) {
                     return (
-                        <div key={`static-${idx}`} className="absolute flex items-center justify-center font-bold text-slate-800" style={node.style}>
+                        <div key={`static-${idx}`} className="absolute flex items-center justify-center font-bold text-slate-800 text-xs" style={node.style}>
                             {node.label}
                         </div>
                     );

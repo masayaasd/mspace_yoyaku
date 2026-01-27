@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Calendar, Table as TableIcon, Settings, MessageSquare, LogOut, Menu, Users } from "lucide-react";
+import { LayoutDashboard, Calendar, Table as TableIcon, Settings, MessageSquare, LogOut, Menu, Users, Database } from "lucide-react";
 import { useState } from "react";
 
 const NavItem = ({ icon, label, path, active }: any) => {
@@ -25,6 +25,7 @@ export const Layout = ({ children, onLogout, user }: any) => {
     const menuItems = [
         { icon: <LayoutDashboard size={18} />, label: "Dashboard", path: "/" },
         { icon: <Calendar size={18} />, label: "Reservations", path: "/reservations" },
+        { icon: <Database size={18} />, label: "Database", path: "/analysis" },
         { icon: <TableIcon size={18} />, label: "Tables", path: "/tables" },
         { icon: <Users size={18} />, label: "Customers", path: "/customers" },
         { icon: <MessageSquare size={18} />, label: "Templates", path: "/templates" },

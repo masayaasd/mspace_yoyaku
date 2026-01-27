@@ -23,10 +23,23 @@ export const LIFFProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [profile, setProfile] = useState<any | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const liffId = window.__ENV__?.VITE_LIFF_ID || import.meta.env.VITE_LIFF_ID;
+    const liffId = window.__ENV__?.VITE_LIFF_ID || import.meta.env.VITE_LIFF_ID || "2008272520-YekBxV2k";
 
     useEffect(() => {
         const initLiff = async () => {
+            // Local Development Mock
+            if (window.location.hostname === "localhost") {
+                console.log("Localhost detected. Mocking LIFF.");
+                setProfile({
+                    userId: "local-user",
+                    displayName: "Local Tester",
+                    pictureUrl: "https://placehold.co/150",
+                    statusMessage: "Dev Mode"
+                });
+                setIsReady(true);
+                return;
+            }
+
             try {
                 if (!liffId) {
                     throw new Error("VITE_LIFF_ID is not defined");

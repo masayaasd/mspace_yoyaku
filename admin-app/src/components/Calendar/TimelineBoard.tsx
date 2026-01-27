@@ -112,11 +112,15 @@ export const TimelineBoard = ({ tables, reservations, onReservationClick }: any)
                                     {tableRes.map((r: any) => {
                                         const left = getPosition(r.startTime);
                                         const width = getWidth(r.startTime, r.endTime);
+                                        const isWalkIn = r.customerName.includes("飛入") || r.customerName.includes("Walk-in");
+                                        const bgClass = isWalkIn
+                                            ? "bg-emerald-500 border-emerald-600"
+                                            : "bg-blue-500 border-blue-600";
 
                                         return (
                                             <div
                                                 key={r.id}
-                                                className="absolute top-2 h-12 bg-blue-500 rounded-md shadow-sm border border-blue-600 opacity-90 hover:opacity-100 hover:z-20 cursor-pointer overflow-hidden group"
+                                                className={`absolute top-2 h-12 rounded-md shadow-sm border opacity-90 hover:opacity-100 hover:z-20 cursor-pointer overflow-hidden group ${bgClass}`}
                                                 style={{ left: `${left}px`, width: `${width}px` }}
                                                 title={`${r.customerName} (${r.partySize}名)`}
                                                 onClick={() => onReservationClick && onReservationClick(r)}
@@ -124,7 +128,7 @@ export const TimelineBoard = ({ tables, reservations, onReservationClick }: any)
                                                 <div className="px-2 py-1 text-white text-xs font-bold truncate">
                                                     {r.customerName}
                                                 </div>
-                                                <div className="px-2 text-blue-100 text-[10px] truncate">
+                                                <div className="px-2 text-white/90 text-[10px] truncate">
                                                     {new Date(r.startTime).getHours()}:{String(new Date(r.startTime).getMinutes()).padStart(2, '0')} -
                                                     {new Date(r.endTime).getHours()}:{String(new Date(r.endTime).getMinutes()).padStart(2, '0')}
                                                 </div>

@@ -2,7 +2,7 @@
 import React from "react";
 import { Badge } from "./UI";
 
-const TableNode = ({ table, style, label, status }: any) => {
+const TableNode = ({ table, style, label, status, reservations, conflictTime, checkTime }: any) => {
     let bgClass = 'bg-white border-slate-200';
     let ringClass = '';
     let textColor = 'text-slate-800';
@@ -20,33 +20,26 @@ const TableNode = ({ table, style, label, status }: any) => {
 
     const getStatusText = () => {
         if (status === 'occupied') {
-            const currentRes = reservations.find((r: any) => {
-                if (r.tableId !== table.id) return false;
-                if (r.status === 'CANCELLED') return false;
-                const start = new Date(r.startTime);
-                const end = new Date(r.endTime);
-                const now = new Date();
-                return now >= start && now < end;
-            });
-            if (currentRes) {
-                const end = new Date(currentRes.endTime);
-                return `~${end.getHours()}:${String(end.getMinutes()).padStart(2, '0')}`;
-            }
-            return '使用中';
+            return conflictTime ? `稼働中(${conflictTime})` : '稼働中';
         }
         if (status === 'available') {
-            // Find next reservation
-            const nextRes = reservations
-                .filter((r: any) => {
-                    return r.tableId === table.id &&
-                        new Date(r.startTime) > new Date() &&
-                        r.status !== 'CANCELLED';
-                })
-                .sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())[0];
+            if (reservations) {
+                // Use the checked time (for booking or realtime look) as baseline
+                const baseline = checkTime ? new Date(checkTime) : new Date();
 
-            if (nextRes) {
-                const start = new Date(nextRes.startTime);
-                return `~${start.getHours()}:${String(start.getMinutes()).padStart(2, '0')}空`;
+                const upcoming = reservations
+                    .filter((r: any) => r.tableId === table.id && r.status !== 'CANCELLED')
+                    .map((r: any) => ({ ...r, start: new Date(r.startTime) }))
+                    .filter((r: any) => r.start > baseline)
+                    .sort((a: any, b: any) => a.start.getTime() - b.start.getTime());
+
+                if (upcoming.length > 0) {
+                    const next = upcoming[0];
+                    const h = next.start.getHours();
+                    const m = next.start.getMinutes();
+                    const timeStr = `${h}:${String(m).padStart(2, '0')}`;
+                    return `空席(次${timeStr})`;
+                }
             }
             return '空席';
         }
@@ -55,7 +48,7 @@ const TableNode = ({ table, style, label, status }: any) => {
 
     return (
         <div
-            className={`absolute flex flex-col items-center justify-center border shadow-sm transition-all duration-200
+            className={`absolute flex flex-col items-center justify-center border shadow-sm transition-all duration-200 
         ${bgClass} ${ringClass}
       `}
             style={{
@@ -63,59 +56,111 @@ const TableNode = ({ table, style, label, status }: any) => {
                 borderRadius: table.name.includes("丸") ? "50%" : "8px",
             }}
         >
-            <span className={`font-bold text-[10px] text-center px-1 leading-tight ${textColor}`}>
+            <span className={`font-black text-sm text-center px-1 leading-tight ${textColor}`}>
                 {label || table.name}
             </span>
-            <span className={`text-[8px] opacity-70 ${textColor}`}>
-                {table.capacityMin}-{table.capacityMax}
-            </span>
-            <span className={`text-[8px] font-bold mt-0.5 ${textColor} bg-white/50 px-1 rounded`}>
+
+            <span className={`text-xs font-bold mt-0.5 ${textColor} bg-white/50 px-1 rounded`}>
                 {getStatusText()}
             </span>
         </div>
     );
 };
 
-export const FloorMap = ({ tables, reservations, onTableClick, selectedTableId }: any) => {
+export const FloorMap = ({ tables, reservations, onTableClick, selectedTableId, checkTime, checkEndTime }: any) => {
 
     const getTable = (id: string) => {
         return tables.find((t: any) => t.name.includes(id) || t.id.toString() === id);
     };
 
-    const tableStatus = (tableId: string) => {
-        if (selectedTableId === tableId) return 'selected';
+    const getTableStatusAndConflict = (tableId: string) => {
+        if (selectedTableId === tableId) return { status: 'selected', conflict: null };
 
-        const now = new Date();
+        const checkStart = checkTime ? new Date(checkTime) : new Date();
+        const checkEnd = checkEndTime ? new Date(checkEndTime) : new Date(checkStart.getTime() + 60 * 60 * 1000); // Default 1h if not set
+
+        let conflictRes = null;
+
         const isOccupied = reservations?.some((r: any) => {
             if (r.tableId !== tableId) return false;
             if (r.status === 'CANCELLED') return false;
-            const start = new Date(r.startTime);
-            const end = new Date(r.endTime);
-            return now >= start && now < end;
+
+            const rStart = new Date(r.startTime);
+            const rEnd = new Date(r.endTime);
+
+            // Overlap check
+            // (StartA < EndB) and (EndA > StartB)
+            if (checkStart < rEnd && checkEnd > rStart) {
+                conflictRes = r;
+                return true;
+            }
+            return false;
         });
 
-        return isOccupied ? 'occupied' : 'available';
+        let conflictStr = null;
+        if (conflictRes) {
+            const s = new Date(conflictRes.startTime);
+            const e = new Date(conflictRes.endTime);
+            const sStr = `${s.getHours()}:${String(s.getMinutes()).padStart(2, '0')}`;
+            const eStr = `${e.getHours()}:${String(e.getMinutes()).padStart(2, '0')}`;
+            conflictStr = `${sStr}-${eStr}`;
+        }
+
+        return {
+            status: isOccupied ? 'occupied' : 'available',
+            conflict: conflictStr
+        };
     };
 
+    // Unified Node Layout (Expanded to reduce right whitespace)
     const nodes = [
-        { id: "T01", style: { top: "5%", left: "5%", width: "40%", height: "18%" }, label: "9名卓(T01)" },
-        { id: "T02", style: { top: "5%", left: "55%", width: "40%", height: "18%" }, label: "9名卓(T02)" },
-        { id: "T03", style: { top: "28%", left: "5%", width: "25%", height: "18%" }, label: "6名卓(T03)" },
-        { id: "T04", style: { top: "28%", left: "37.5%", width: "25%", height: "30%" }, label: "9名卓(T04)" },
-        { id: "T05", style: { top: "28%", left: "70%", width: "25%", height: "18%" }, label: "6名卓(T05)" },
-        { id: "T06", style: { top: "52%", left: "5%", width: "25%", height: "18%" }, label: "6名卓(T06)" },
-        { id: "T07", style: { top: "75%", left: "5%", width: "25%", height: "18%" }, label: "6名卓(T07)" },
-        { id: "T08", style: { top: "75%", left: "37.5%", width: "25%", height: "18%" }, label: "4-6名(T08)" },
-        { id: "RECEPTION", style: { top: "62%", left: "70%", width: "25%", height: "12%", border: "1px dashed #ccc", background: "transparent" }, label: "受付", isStatic: true },
-        { id: "VIP", style: { top: "75%", left: "70%", width: "25%", height: "18%", border: "2px solid #fbbf24", background: "#fffbeb" }, label: "VIP" },
+        // --- Top Row ---
+        // Left: 9名卓
+        { id: "T01", style: { top: "2%", left: "2%", width: "47%", height: "20%" }, label: "9名卓(T01)" },
+        // Right: 9名卓
+        { id: "T02", style: { top: "2%", left: "51%", width: "47%", height: "20%" }, label: "9名卓(T02)" },
+
+        // --- Middle Row ---
+        // Left: 6名卓
+        { id: "T03", style: { top: "25%", left: "2%", width: "29%", height: "20%", borderRadius: "4px" }, label: "6名卓(T03)" },
+        // Center: 9名卓 (Vertical)
+        { id: "T04", style: { top: "24%", left: "33%", width: "32%", height: "35%", borderRadius: "4px" }, label: "9名卓(T04)" },
+        // Right: 6名卓
+        { id: "T05", style: { top: "25%", left: "67%", width: "29%", height: "20%", borderRadius: "4px" }, label: "6名卓(T05)" },
+
+        // --- Bottom Row ---
+        // Left: 6名卓 (Smoking)
+        { id: "T06", style: { top: "50%", left: "2%", width: "29%", height: "20%", borderRadius: "4px" }, label: "6名卓(T06)" },
+
+        // T07 (Bottom Left Smoking):
+        { id: "T07", style: { top: "75%", left: "2%", width: "29%", height: "20%", borderRadius: "4px" }, label: "6名卓(T07)" },
+        { id: "T07_Label", isLabel: true, style: { top: "96%", left: "2%", width: "29%", height: "5%", fontSize: "11px", color: "#333", textAlign: "center" as const }, label: "(喫煙)" },
+
+        // T08 (Bottom Center Smoking):
+        { id: "T08", style: { top: "75%", left: "33%", width: "30%", height: "20%", borderRadius: "4px" }, label: "4~6名" },
+        { id: "T08_Label", isLabel: true, style: { top: "96%", left: "33%", width: "30%", height: "5%", fontSize: "11px", color: "#333", textAlign: "center" as const }, label: "(喫煙)" },
+
+        // Reception Node (Visual)
+        { id: "RECEPTION", style: { top: "62%", left: "33%", width: "30%", height: "15%", border: "2px solid #333", background: "#fff" }, label: "受付", isStatic: true },
+
+        // VIP (Right Side)
+        { id: "VIP", style: { top: "50%", left: "67%", width: "29%", height: "20%", borderRadius: "4px", border: "2px solid #000" }, label: "VIP" },
     ];
 
     return (
-        <div className="relative w-full aspect-square bg-slate-50 border rounded-2xl overflow-hidden p-2 shadow-inner">
-            {nodes.map((node, idx) => {
+        <div className="relative w-full aspect-[4/4] bg-white border-2 border-slate-800 rounded-none overflow-hidden p-2">
+            {nodes.map((node: any, idx) => {
+                if (node.isLabel) {
+                    return (
+                        <div key={`label-${idx}`} className="absolute font-bold items-center justify-center flex" style={node.style}>
+                            {node.label}
+                        </div>
+                    );
+                }
+
                 if (node.isStatic) {
                     return (
-                        <div key={`static-${idx}`} className="absolute flex items-center justify-center font-bold text-slate-400 text-[10px]" style={node.style}>
+                        <div key={`static-${idx}`} className="absolute flex items-center justify-center font-bold text-slate-400 text-xs" style={node.style}>
                             {node.label}
                         </div>
                     );
@@ -124,16 +169,18 @@ export const FloorMap = ({ tables, reservations, onTableClick, selectedTableId }
                 const tableData = getTable(node.id);
                 if (!tableData) return null;
 
-                const status = tableStatus(tableData.id);
+                const { status, conflict } = getTableStatusAndConflict(tableData.id);
 
                 return (
-                    <div key={node.id} onClick={() => status !== 'occupied' && onTableClick && onTableClick(tableData)}>
+                    <div key={node.id} onClick={() => status !== 'occupied' && onTableClick && onTableClick(tableData, status === 'occupied')}>
                         <TableNode
                             table={tableData}
                             label={node.label}
                             style={node.style}
                             status={status}
                             reservations={reservations}
+                            conflictTime={conflict}
+                            checkTime={checkTime}
                         />
                     </div>
                 );

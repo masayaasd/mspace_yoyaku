@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { Button, Card, Badge, Input } from "../UI";
-import { X, Clock, User, Phone, Plus } from "lucide-react";
+import { X, Clock, User, Phone, Plus, LogOut } from "lucide-react";
 import axios from "axios";
 
 const apiBase = import.meta.env.VITE_API_BASE || "";
@@ -16,6 +16,79 @@ export const TimelineModal = ({ table, reservations, onClose, onReservationClick
         phoneUnknown: false
     });
     const [loading, setLoading] = useState(false);
+
+    const currentActiveRes = reservations.find((r: any) => {
+        if (r.tableId !== table.id || r.status === 'CANCELLED') return false;
+        const now = new Date();
+        const start = new Date(r.startTime);
+        const end = new Date(r.endTime);
+        return now >= start && now < end;
+    });
+
+    const handleWalkIn = async () => {
+        if (!confirm("飛び入り来店として登録しますか？\n(原則12時間、または次の予約まで稼働中となります)")) return;
+        setLoading(true);
+        try {
+            const start = new Date();
+            let end = new Date(start.getTime() + 12 * 60 * 60 * 1000); // 12 Hours default
+
+            // Check for next reservation to clamp end time
+            const nextRes = reservations
+                .filter((r: any) => r.tableId === table.id && r.status !== 'CANCELLED')
+                .map((r: any) => ({ ...r, start: new Date(r.startTime) }))
+                .filter((r: any) => r.start > start)
+                .sort((a: any, b: any) => a.start.getTime() - b.start.getTime())[0];
+
+            if (nextRes) {
+                if (nextRes.start < end) {
+                    end = nextRes.start; // Clamp to next reservation start
+                }
+            }
+
+            await axios.post(`${apiBase}/api/reservations`, {
+                tableId: table.id,
+                customerName: "Walk-in (飛入)",
+                customerPhone: "00000",
+                partySize: table.capacityMin,
+                startTime: start.toISOString(),
+                endTime: end.toISOString()
+            });
+
+            alert("飛入来店を登録しました");
+            if (onUpdate) onUpdate();
+            onClose(); // Close modal on success? Or keep open? Maybe close to see map update.
+        } catch (e: any) {
+            console.error(e);
+            alert("登録失敗: " + (e.response?.data?.error || e.message));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCheckout = async () => {
+        if (!currentActiveRes) return;
+        if (!confirm("退店・席を解放しますか？\n(現在の予約は現在時刻で終了します)")) return;
+        setLoading(true);
+        try {
+            const now = new Date();
+            // Ensure end > start (if checking out instantly after verify? practically mostly ok)
+            // If now < start (impossible if active), but if created 1ms ago?
+            // Just force now.
+
+            await axios.put(`${apiBase}/api/reservations/${currentActiveRes.id}`, {
+                endTime: now.toISOString()
+            });
+
+            alert("席を解放しました");
+            if (onUpdate) onUpdate();
+            onClose();
+        } catch (e: any) {
+            console.error(e);
+            alert("更新失敗: " + (e.response?.data?.error || e.message));
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Reset state when table changes
     useEffect(() => {
@@ -77,12 +150,33 @@ export const TimelineModal = ({ table, reservations, onClose, onReservationClick
         }
     };
 
-    // Show 12:00 to 30:00 (next day 6:00)
-    const timelineStart = 12;
+    // Show 06:00 to 30:00 (next day 6:00) - Full 24h
+    const timelineStart = 6;
     const timelineEnd = 30;
     const totalHours = timelineEnd - timelineStart;
 
     const modalRef = useRef<HTMLDivElement>(null);
+
+    // Set default time to current hour (or next hour)
+    useEffect(() => {
+        if (table) {
+            const now = new Date();
+            let h = now.getHours();
+            // If late night (0-5), treat as 24+
+            if (h < 6) h += 24;
+
+            // Default to next hour
+            const nextH = h + 1;
+            const displayH = nextH >= 24 ? nextH - 24 : nextH;
+
+            setNewRes(prev => ({
+                ...prev,
+                partySize: table.capacityMin,
+                time: `${displayH}:00`,
+                endTime: `${displayH + 2}:00`
+            }));
+        }
+    }, [table]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -138,17 +232,21 @@ export const TimelineModal = ({ table, reservations, onClose, onReservationClick
 
                 <div className="p-6 overflow-x-auto">
                     {/* Time Scale */}
-                    <div className="relative h-12 border-b mb-4 min-w-[600px]">
+                    <div className="relative h-8 border-b mb-4 min-w-[600px]">
                         {Array.from({ length: totalHours + 1 }).map((_, i) => {
                             const hour = timelineStart + i;
                             const label = hour >= 24 ? `${hour - 24}:00` : `${hour}:00`;
+
+                            // Show label every 2 hours (e.g. 6, 8, 10...)
+                            const showLabel = hour % 2 === 0;
+
                             return (
                                 <div
                                     key={hour}
-                                    className="absolute bottom-0 text-xs text-slate-400 border-l border-slate-200 h-2 pl-1"
+                                    className={`absolute text-xs text-slate-400 border-l border-slate-200 h-2 pl-1 top-0`}
                                     style={{ left: `${(i / totalHours) * 100}%` }}
                                 >
-                                    {label}
+                                    {showLabel && <span>{label}</span>}
                                 </div>
                             );
                         })}
@@ -180,15 +278,30 @@ export const TimelineModal = ({ table, reservations, onClose, onReservationClick
                     </div>
                 </div>
 
-                <div className="p-4 bg-slate-50 border-t flex justify-between items-center">
-                    {!showCreateForm ? (
-                        <Button variant="outline" onClick={() => setShowCreateForm(true)}>
-                            <Plus size={16} /> この卓で新規予約
-                        </Button>
-                    ) : (
+                <div className="p-4 bg-slate-50 border-t flex justify-between items-center gap-2">
+                    <div className="flex gap-2">
+                        {!currentActiveRes ? (
+                            <>
+                                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleWalkIn} disabled={loading}>
+                                    <Clock size={16} className="mr-1" /> 飛入来店 (12H稼働)
+                                </Button>
+                                {!showCreateForm && (
+                                    <Button variant="outline" onClick={() => setShowCreateForm(true)}>
+                                        <Plus size={16} className="mr-1" /> 詳細予約
+                                    </Button>
+                                )}
+                            </>
+                        ) : (
+                            <Button className="bg-amber-600 hover:bg-amber-700 text-white" onClick={handleCheckout} disabled={loading}>
+                                <LogOut size={16} className="mr-1" /> 退店・席解放
+                            </Button>
+                        )}
+                    </div>
+
+                    {showCreateForm && (
                         <Button variant="secondary" onClick={() => setShowCreateForm(false)}>キャンセル</Button>
                     )}
-                    <Button variant="secondary" onClick={onClose}>閉じる</Button>
+                    <Button variant="ghost" onClick={onClose}>閉じる</Button>
                 </div>
 
                 {showCreateForm && (
@@ -325,6 +438,6 @@ export const TimelineModal = ({ table, reservations, onClose, onReservationClick
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
