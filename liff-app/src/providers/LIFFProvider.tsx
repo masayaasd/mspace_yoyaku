@@ -23,7 +23,7 @@ export const LIFFProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [profile, setProfile] = useState<any | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const liffId = import.meta.env.VITE_LIFF_ID;
+    const liffId = window.__ENV__?.VITE_LIFF_ID || import.meta.env.VITE_LIFF_ID;
 
     useEffect(() => {
         const initLiff = async () => {

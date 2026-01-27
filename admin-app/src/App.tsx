@@ -11,7 +11,7 @@ import { LineSettings } from "./pages/LineSettings";
 import { Templates } from "./pages/Templates";
 import { Customers } from "./pages/Customers";
 
-const apiBase = import.meta.env.VITE_API_BASE || "/api";
+const apiBase = window.__ENV__?.VITE_API_BASE || import.meta.env.VITE_API_BASE || "/api";
 
 const client = axios.create({
     baseURL: apiBase,

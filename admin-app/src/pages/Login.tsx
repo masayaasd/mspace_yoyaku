@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button, Input, Card } from "../components/UI";
 import axios from "axios";
 
-const apiBase = import.meta.env.VITE_API_BASE || "";
+const apiBase = window.__ENV__?.VITE_API_BASE || import.meta.env.VITE_API_BASE || "";
 
 export const Login = ({ onLoginSuccess }: any) => {
     const [loading, setLoading] = useState(false);

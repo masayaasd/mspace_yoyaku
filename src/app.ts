@@ -54,9 +54,29 @@ try {
   console.error("Failed to read admin dist:", e);
 }
 app.use("/admin", express.static(adminDist));
-app.use(express.static(liffDist));
+// Helper to inject env vars
+const injectEnv = (filePath: string, res: Response) => {
+  fs.readFile(filePath, "utf8", (err, data) => {
+    if (err) {
+      console.error("Failed to read index.html:", err);
+      return res.status(500).send("Internal Server Error");
+    }
+    const envScript = `
+      <script>
+        window.__ENV__ = {
+          VITE_LIFF_ID: "${process.env.VITE_LIFF_ID || ""}",
+          VITE_API_BASE: "${process.env.VITE_API_BASE || ""}"
+        };
+      </script>
+    `;
+    const finalHtml = data.replace("</head>", `${envScript}</head>`);
+    res.send(finalHtml);
+  });
+};
+
+app.use("/admin", express.static(adminDist, { index: false }));
 app.get("/admin/*", (_req, res) => {
-  res.sendFile(path.join(adminDist, "index.html"));
+  injectEnv(path.join(adminDist, "index.html"), res);
 });
 
 // Routes
@@ -66,12 +86,13 @@ app.use("/api/auth", authRouter);
 app.use("/api", customerRouter);
 
 // LIFF App Fallback
+app.use(express.static(liffDist, { index: false }));
 app.get("*", (req, res, next) => {
   // If it starts with /api or /line, skip (already handled above)
   if (req.path.startsWith("/api") || req.path.startsWith("/line") || req.path.startsWith("/healthz")) {
     return next();
   }
-  res.sendFile(path.join(liffDist, "index.html"));
+  injectEnv(path.join(liffDist, "index.html"), res);
 });
 
 app.post(
