@@ -72,6 +72,9 @@ export const LIFFProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 let msg = err.message || "Initialization failed";
                 if (err.response?.data?.error) {
                     msg = `${err.response.data.error}`;
+                    if (err.response.data.detail) {
+                        msg += `\n(${err.response.data.detail})`;
+                    }
                 }
                 setError(msg);
             }
