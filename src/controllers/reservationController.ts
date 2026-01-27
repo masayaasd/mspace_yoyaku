@@ -1,6 +1,6 @@
 import { type MessageEvent } from "@line/bot-sdk";
 import { z } from "zod";
-import { client } from "../lib/lineClient.js";
+import { getLineClient } from "../lib/lineClient.js";
 import { tableService } from "../services/tableService.js";
 import { reservationService } from "../services/reservationService.js";
 import { conversationService } from "../services/conversationService.js";
@@ -19,6 +19,7 @@ async function handleProvisionalBooking(event: MessageEvent) {
   if (event.message.type !== "text") return;
   const requestedAt = parseDate(event.message.text.trim());
   if (!requestedAt) {
+    const client = await getLineClient();
     await client.replyMessage(event.replyToken, {
       type: "text",
       text: "日時の形式が正しくありません。例: 2024-05-10 19:00",
@@ -40,6 +41,7 @@ async function handleProvisionalBooking(event: MessageEvent) {
 
   const availableTables = availability.filter((a) => a.isAvailable);
   if (availableTables.length === 0) {
+    const client = await getLineClient();
     await client.replyMessage(event.replyToken, {
       type: "text",
       text: "ご指定の時間に空きがありません。他の時間をお試しください。",
@@ -61,6 +63,7 @@ async function handleProvisionalBooking(event: MessageEvent) {
     });
   }
 
+  const client = await getLineClient();
   await client.replyMessage(event.replyToken, {
     type: "text",
     text: `空きがあるテーブルはこちらです:\n${text}\n希望の番号とお名前・電話番号を続けて送信してください。\n例: 1 田中太郎 08012345678`,
@@ -110,12 +113,14 @@ async function handleConfirmationStep(
       await conversationService.clearContext(event.source.userId);
     }
 
+    const client = await getLineClient();
     await client.replyMessage(event.replyToken, {
       type: "text",
       text: `${reservation.customerName}様、ご予約を承りました。\n${new Date(reservation.startTime).toLocaleString("ja-JP")}からご利用いただけます。`,
     });
   } catch (err) {
     logger.warn({ err }, "Failed to confirm reservation");
+    const client = await getLineClient();
     await client.replyMessage(event.replyToken, {
       type: "text",
       text: "入力を確認できませんでした。例の形式に従って入力してください (例: 1 田中太郎 08012345678)。",

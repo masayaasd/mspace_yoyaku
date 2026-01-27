@@ -1,4 +1,4 @@
-import { client } from "../lib/lineClient.js";
+import { getLineClient } from "../lib/lineClient.js";
 import { prisma } from "../lib/prisma.js";
 import { type Prisma, type Reservation, NotificationType } from "@prisma/client";
 const REMINDER_TYPE = NotificationType.REMINDER;
@@ -18,6 +18,7 @@ async function sendReminder(reservation: Reservation & { lineUserId: string | nu
   }
 
   try {
+    const client = await getLineClient();
     await client.pushMessage(reservation.lineUserId, {
       type: "text",
       text: message,

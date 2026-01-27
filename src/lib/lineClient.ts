@@ -12,8 +12,4 @@ export const getLineClient = async () => {
   } satisfies ClientConfig);
 };
 
-// For backward compatibility where it's used as 'client'
-export const client = new Client({
-  channelSecret: config.line.channelSecret,
-  channelAccessToken: config.line.accessToken,
-} satisfies ClientConfig);
+// Static client removed to enforce dynamic configuration via getLineClient()
