@@ -18,6 +18,41 @@ const TableNode = ({ table, style, label, status }: any) => {
         textColor = 'text-blue-900';
     }
 
+    const getStatusText = () => {
+        if (status === 'occupied') {
+            const currentRes = reservations.find((r: any) => {
+                if (r.tableId !== table.id) return false;
+                if (r.status === 'CANCELLED') return false;
+                const start = new Date(r.startTime);
+                const end = new Date(r.endTime);
+                const now = new Date();
+                return now >= start && now < end;
+            });
+            if (currentRes) {
+                const end = new Date(currentRes.endTime);
+                return `~${end.getHours()}:${String(end.getMinutes()).padStart(2, '0')}`;
+            }
+            return '使用中';
+        }
+        if (status === 'available') {
+            // Find next reservation
+            const nextRes = reservations
+                .filter((r: any) => {
+                    return r.tableId === table.id &&
+                        new Date(r.startTime) > new Date() &&
+                        r.status !== 'CANCELLED';
+                })
+                .sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())[0];
+
+            if (nextRes) {
+                const start = new Date(nextRes.startTime);
+                return `~${start.getHours()}:${String(start.getMinutes()).padStart(2, '0')}空`;
+            }
+            return '空席';
+        }
+        return '';
+    };
+
     return (
         <div
             className={`absolute flex flex-col items-center justify-center border shadow-sm transition-all duration-200
@@ -33,6 +68,9 @@ const TableNode = ({ table, style, label, status }: any) => {
             </span>
             <span className={`text-[8px] opacity-70 ${textColor}`}>
                 {table.capacityMin}-{table.capacityMax}
+            </span>
+            <span className={`text-[8px] font-bold mt-0.5 ${textColor} bg-white/50 px-1 rounded`}>
+                {getStatusText()}
             </span>
         </div>
     );
@@ -95,6 +133,7 @@ export const FloorMap = ({ tables, reservations, onTableClick, selectedTableId }
                             label={node.label}
                             style={node.style}
                             status={status}
+                            reservations={reservations}
                         />
                     </div>
                 );

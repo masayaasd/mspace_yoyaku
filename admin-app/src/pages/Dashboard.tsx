@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Card } from "../components/UI";
 import { Users, Calendar, CheckCircle, TrendingUp } from "lucide-react";
 import { FloorMap } from "../components/Calendar/FloorMap";
@@ -69,9 +70,9 @@ export const Dashboard = () => {
                     <p className="text-slate-500">本日の予約状況とステータスの概要です</p>
                 </div>
                 <div className="mb-2">
-                    <a href="/reservations/new" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow-sm inline-flex items-center">
+                    <Link to="/reservations/new" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow-sm inline-flex items-center">
                         ＋ 新規予約
-                    </a>
+                    </Link>
                 </div>
             </div>
 

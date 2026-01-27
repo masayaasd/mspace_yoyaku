@@ -75,13 +75,15 @@ export const FloorMapPage = () => {
                 <Badge color="green">リアルタイム</Badge>
             </div>
 
-            <FloorMap
-                tables={tables}
-                reservations={reservations}
-                onTableClick={setSelectedTable}
-                selectedTableId={selectedTable?.id}
-            />
-
+            {/* Floor Map */}
+            <div className="flex-1 relative overflow-hidden bg-slate-100/50">
+                <FloorMap
+                    tables={tables}
+                    reservations={reservations}
+                    onTableClick={handleTableClick}
+                    selectedTableId={selectedTable?.id}
+                />
+            </div>
             {selectedTable ? (
                 <Card className="animate-in slide-in-from-bottom-4 duration-300">
                     <div className="flex justify-between items-start mb-4">

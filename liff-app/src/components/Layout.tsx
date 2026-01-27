@@ -21,13 +21,13 @@ export const Layout: React.FC = () => {
     }
 
     const tabs = [
-        { path: "/", label: "マップ", icon: LayoutGrid },
+        { path: "/", label: "リアルタイム", icon: LayoutGrid },
         { path: "/new", label: "新規予約", icon: PlusCircle },
         { path: "/my", label: "予約確認", icon: UserCircle },
     ];
 
     return (
-        <div className="flex flex-col h-screen max-w-md mx-auto bg-slate-50 relative">
+        <div className="flex flex-col h-dvh max-w-md mx-auto bg-slate-50 relative">
             {/* Header */}
             <header className="h-14 bg-white border-b flex items-center px-6 sticky top-0 z-40">
                 <h1 className="font-black text-xl text-slate-800 tracking-tight">
