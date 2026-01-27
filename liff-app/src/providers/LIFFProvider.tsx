@@ -68,7 +68,12 @@ export const LIFFProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setIsReady(true);
             } catch (err: any) {
                 console.error("LIFF Init Error:", err);
-                setError(err.message || "Initialization failed");
+                // Try to get backend error message
+                let msg = err.message || "Initialization failed";
+                if (err.response?.data?.error) {
+                    msg = `${err.response.data.error}`;
+                }
+                setError(msg);
             }
         };
 

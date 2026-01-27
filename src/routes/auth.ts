@@ -51,15 +51,26 @@ router.post("/liff", async (req, res) => {
         picture: data.picture ?? null,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.warn(
       {
         err: axios.isAxiosError(error) ? error.toJSON() : error,
       },
       "LIFF authentication failed"
     );
+
+    // Extract meaningful error message
+    let errorMessage = "Authentication failed";
+    if (axios.isAxiosError(error) && error.response?.data) {
+      const lineError = error.response.data as any;
+      errorMessage = `LINE API Error: ${lineError.error_description || lineError.error || "Unknown"}`;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
     return res.status(401).json({
-      error: "Invalid idToken",
+      error: errorMessage,
+      detail: "Please check LINE_LOGIN_CHANNEL_ID configuration"
     });
   }
 });
