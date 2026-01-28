@@ -214,13 +214,13 @@ export const BookingPage = () => {
             // but represents a later time on the next day, and wasn't caught by the <6 AM rule.
             if (end <= start) end.setDate(end.getDate() + 1);
 
-            await api.post("/api/reservations", {
+            await api.post("/api/book", {
                 tableId: bookingData.tableId,
-                startTime: start.toISOString(),
-                endTime: end.toISOString(),
+                startAt: start.toISOString(),
+                endAt: end.toISOString(),
                 partySize: Number(bookingData.partySize),
-                customerName: bookingData.name,
-                customerPhone: bookingData.phone
+                name: bookingData.name,
+                phone: bookingData.phone
             });
             setStep(4); // Success Step
         } catch (e: any) {
