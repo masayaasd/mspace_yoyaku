@@ -38,7 +38,7 @@ function overlaps(start: Date, end: Date, existingStart: Date, existingEnd: Date
 async function assertCapacity(tableId: string, partySize: number) {
   const table = await prisma.pokerTable.findUniqueOrThrow({ where: { id: tableId } });
   if (partySize < table.capacityMin || partySize > table.capacityMax) {
-    throw new Error("Party size is outside table capacity");
+    throw new Error(`人数(${partySize}名)がテーブル定員(${table.capacityMin}〜${table.capacityMax}名)の範囲外です`);
   }
   return table;
 }
