@@ -14,7 +14,11 @@ export const MyReservationsPage = () => {
         setLoading(true);
         try {
             const { data } = await api.get("/api/my/reservations");
-            setReservations(data.reservations || []);
+            // Sort by startTime descending (newest first)
+            const sorted = (data.reservations || []).sort((a: any, b: any) =>
+                new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+            );
+            setReservations(sorted);
         } catch (e) {
             console.error(e);
         } finally {
@@ -102,15 +106,32 @@ export const MyReservationsPage = () => {
         }
     };
 
-    // Generate time slots for editing
-    const timeSlots = Array.from({ length: 48 }, (_, i) => {
-        const totalMinutes = (6 * 60) + (i * 30);
-        const h = Math.floor(totalMinutes / 60);
-        const m = totalMinutes % 60;
-        const displayH = h >= 24 ? h - 24 : h;
-        const timeString = `${String(displayH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-        return { value: timeString, label: timeString };
-    });
+    // Generate time slots for editing (only 1+ hour from now)
+    const getEditTimeSlots = () => {
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+        return Array.from({ length: 48 }, (_, i) => {
+            const totalMinutes = (6 * 60) + (i * 30);
+            const h = Math.floor(totalMinutes / 60);
+            const m = totalMinutes % 60;
+            const displayH = h >= 24 ? h - 24 : h;
+            const timeString = `${String(displayH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+
+            // Only show times 1+ hour from now (for today's edits)
+            if (selectedReservation) {
+                const resDate = new Date(selectedReservation.startTime);
+                const isToday = resDate.toDateString() === now.toDateString();
+                if (isToday && totalMinutes < currentMinutes + 60) {
+                    return null;
+                }
+            }
+
+            return { value: timeString, label: timeString };
+        }).filter(Boolean);
+    };
+
+    const timeSlots = getEditTimeSlots();
 
     return (
         <div className="space-y-6 pb-20">
