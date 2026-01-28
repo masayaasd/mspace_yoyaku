@@ -17,8 +17,8 @@ export const FloorMapPage = () => {
         time: "19:00",
         endTime: "",
         partySize: "", // Default empty
-        name: profile?.displayName || "Guest",
-        phone: ""
+        name: localStorage.getItem("userName") || "",
+        phone: localStorage.getItem("userPhone") || ""
     });
 
     // Mock data for local development if API fails or LIFF not ready
@@ -92,13 +92,18 @@ export const FloorMapPage = () => {
                 return;
             }
 
-            await api.post("/api/reservations", {
+            // Save to localStorage for next time
+            localStorage.setItem("userName", bookingData.name);
+            localStorage.setItem("userPhone", bookingData.phone);
+
+            // Use /api/book (customer endpoint) to properly save lineUserId
+            await api.post("/api/book", {
                 tableId: selectedTable.id,
-                customerName: bookingData.name,
-                customerPhone: bookingData.phone,
+                name: bookingData.name,
+                phone: bookingData.phone,
                 partySize: size,
-                startTime: start.toISOString(),
-                endTime: end.toISOString()
+                startAt: start.toISOString(),
+                endAt: end.toISOString()
             });
             alert("予約が完了しました！");
             setSelectedTable(null);
