@@ -16,15 +16,17 @@ type VerifyResponse = {
 };
 
 router.post("/liff", async (req, res) => {
+  const { idToken } = req.body as { idToken?: string };
+  let loginChannelId: string | null = null;
+
   try {
-    const { idToken } = req.body as { idToken?: string };
     if (!idToken) {
       return res.status(400).json({ error: "idToken required" });
     }
 
     const verifyUrl = "https://api.line.me/oauth2/v2.1/verify";
 
-    const loginChannelId = await settingsService.getSetting("LINE_LOGIN_CHANNEL_ID");
+    loginChannelId = await settingsService.getSetting("LINE_LOGIN_CHANNEL_ID");
     const jwtSecret = await settingsService.getSetting("JWT_SECRET");
 
     const { data } = await axios.post<VerifyResponse>(verifyUrl, new URLSearchParams({
@@ -61,7 +63,7 @@ router.post("/liff", async (req, res) => {
 
     // Auto-Diagnosis for 401
     let detailMessage = "Please check LINE_LOGIN_CHANNEL_ID configuration";
-    let backendId = loginChannelId ?? config.line.loginChannelId;
+    const backendId = loginChannelId ?? config.line.loginChannelId;
 
     try {
       const decoded = jwt.decode(idToken || "") as any;
