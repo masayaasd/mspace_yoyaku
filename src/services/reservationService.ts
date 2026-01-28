@@ -136,7 +136,7 @@ async function listUserReservations(lineUserId: string): Promise<UserReservation
   return prisma.reservation.findMany({
     where: {
       lineUserId,
-      status: { in: [CONFIRMED_STATUS, PENDING_STATUS] },
+      status: { in: ["CONFIRMED", "PENDING", "CANCELLED"] },
     },
     orderBy: { startTime: "asc" },
     include: { table: true },

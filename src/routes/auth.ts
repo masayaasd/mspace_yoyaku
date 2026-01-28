@@ -86,11 +86,9 @@ router.post("/liff", async (req, res) => {
 
     return res.status(401).json({
       error: errorMessage,
-      return res.status(401).json({
-        error: errorMessage,
-        detail: detailMessage
-      });
-    }
+      detail: detailMessage
+    });
+  }
 });
 
 export const authRouter = router;

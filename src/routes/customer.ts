@@ -55,7 +55,8 @@ router.get(
 
     await Promise.all(
       tables.map(async (table) => {
-        if (partySize < table.capacityMin || partySize > table.capacityMax) {
+        // Relaxed rule: no minimum check
+        if (partySize > table.capacityMax) {
           return;
         }
 
