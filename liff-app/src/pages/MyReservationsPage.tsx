@@ -143,7 +143,7 @@ export const MyReservationsPage = () => {
                         <div className="flex gap-3">
                             <Button variant="secondary" className="flex-1" onClick={() => setSelectedReservation(null)}>閉じる</Button>
                             {selectedReservation.status === 'CONFIRMED' && (
-                                <Button className="flex-1 bg-red-50 text-red-600 hover:bg-red-100 border-red-100" onClick={() => handleCancel(selectedReservation.id)}>
+                                <Button className="flex-1 bg-red-600 text-white hover:bg-red-700 shadow-md shadow-red-200" onClick={() => handleCancel(selectedReservation.id)}>
                                     キャンセル
                                 </Button>
                             )}

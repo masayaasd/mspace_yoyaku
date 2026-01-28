@@ -108,7 +108,13 @@ app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof Error) {
     console.error("Stack:", err.stack);
     logger.error({ err, stack: err.stack, path: req.path, method: req.method }, "Unhandled error");
-    if (err.message === "Party size is outside table capacity" || err.message === "Selected slot is unavailable") {
+
+    // Check for known business logic errors
+    if (
+      err.message === "Selected slot is unavailable" ||
+      err.message.includes("範囲外です") || // Matches "人数(X)が...範囲外です"
+      err.message === "Party size is outside table capacity" // Keep legacy just in case
+    ) {
       res.status(400).json({ error: err.message });
       return;
     }

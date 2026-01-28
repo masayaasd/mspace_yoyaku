@@ -81,11 +81,19 @@ export const FloorMapPage = () => {
             // Just like BookingPage, ensure end > start
             if (end <= start) end.setDate(end.getDate() + 1);
 
+            // Client-side Capacity Check
+            const size = Number(bookingData.partySize);
+            if (selectedTable && (size < selectedTable.capacityMin || size > selectedTable.capacityMax)) {
+                alert(`人数(${size}名)はこのテーブルの定員(${selectedTable.capacityMin}〜${selectedTable.capacityMax}名)の範囲外です。\n別のテーブルを選択するか、人数を変更してください。`);
+                setLoading(false);
+                return;
+            }
+
             await api.post("/api/reservations", {
                 tableId: selectedTable.id,
                 customerName: bookingData.name,
                 customerPhone: bookingData.phone,
-                partySize: Number(bookingData.partySize),
+                partySize: size,
                 startTime: start.toISOString(),
                 endTime: end.toISOString()
             });
