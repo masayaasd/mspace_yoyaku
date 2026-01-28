@@ -111,9 +111,9 @@ app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
 
     // Check for known business logic errors
     if (
-      err.message === "Selected slot is unavailable" ||
-      err.message.includes("範囲外です") || // Matches "人数(X)が...範囲外です"
-      err.message === "Party size is outside table capacity" // Keep legacy just in case
+      err.message === "指定された時間は既に予約が入っています" ||
+      err.message.includes("定員") || // Matches "定員(X名)を超えています"
+      err.message === "Selected slot is unavailable" // Keep legacy just in case
     ) {
       res.status(400).json({ error: err.message });
       return;

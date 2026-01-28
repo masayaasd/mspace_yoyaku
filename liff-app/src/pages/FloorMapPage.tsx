@@ -12,6 +12,7 @@ export const FloorMapPage = () => {
     const [tables, setTables] = useState([]);
     const [reservations, setReservations] = useState([]);
     const [selectedTable, setSelectedTable] = useState<any>(null);
+    const [confirmModalOpen, setConfirmModalOpen] = useState(false);
     const [bookingData, setBookingData] = useState({
         time: "19:00",
         endTime: "",
@@ -83,9 +84,11 @@ export const FloorMapPage = () => {
 
             // Client-side Capacity Check
             const size = Number(bookingData.partySize);
-            if (selectedTable && (size < selectedTable.capacityMin || size > selectedTable.capacityMax)) {
-                alert(`人数(${size}名)はこのテーブルの定員(${selectedTable.capacityMin}〜${selectedTable.capacityMax}名)の範囲外です。\n別のテーブルを選択するか、人数を変更してください。`);
+            // Only check MAX capacity now, as requested
+            if (selectedTable && (size > selectedTable.capacityMax)) {
+                alert(`人数(${size}名)がテーブル定員(${selectedTable.capacityMax}名)を超えています。\n別のテーブルを選択するか、人数を変更してください。`);
                 setLoading(false);
+                setConfirmModalOpen(false); // Close modal on error
                 return;
             }
 
@@ -99,6 +102,7 @@ export const FloorMapPage = () => {
             });
             alert("予約が完了しました！");
             setSelectedTable(null);
+            setConfirmModalOpen(false);
             // Refresh
             const r = await api.get("/api/reservations?start=" + new Date().toISOString().split('T')[0]);
             setReservations(r.data);
@@ -384,14 +388,72 @@ export const FloorMapPage = () => {
 
                             <Button
                                 className="w-full h-14 text-white font-bold text-lg rounded-xl shadow-lg shadow-blue-200 active:scale-95 transition-all bg-blue-600 hover:bg-blue-700"
-                                onClick={handleQuickBook}
+                                onClick={() => setConfirmModalOpen(true)}
                                 disabled={loading}
                             >
-                                {loading ? "処理中..." : "確定"}
+                                {loading ? "処理中..." : "確認へ進む"}
                             </Button>
                         </div>
                     </div>
                 </>
+            )}
+
+            {/* Confirmation Modal */}
+            {confirmModalOpen && selectedTable && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-6">
+                        <div className="text-center space-y-2 border-b border-slate-100 pb-4">
+                            <h3 className="text-xl font-black text-slate-800">予約内容の確認</h3>
+                            <p className="text-sm text-slate-500">以下の内容で予約を確定しますか？</p>
+                        </div>
+
+                        <div className="space-y-4 text-sm">
+                            <div className="flex justify-between border-b border-slate-50 pb-2">
+                                <span className="text-slate-500 font-bold">テーブル</span>
+                                <span className="font-bold text-slate-800">{selectedTable.name}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-slate-50 pb-2">
+                                <span className="text-slate-500 font-bold">来店・終了</span>
+                                <span className="font-bold text-slate-800 text-right">
+                                    {bookingData.time} 〜 {bookingData.endTime}<br />
+                                    <span className="text-xs text-slate-400 font-normal">※当日のリアルタイム予約</span>
+                                </span>
+                            </div>
+                            <div className="flex justify-between border-b border-slate-50 pb-2">
+                                <span className="text-slate-500 font-bold">人数</span>
+                                <span className="font-bold text-slate-800">{bookingData.partySize}名様</span>
+                            </div>
+                            <div className="flex justify-between border-b border-slate-50 pb-2">
+                                <span className="text-slate-500 font-bold">お名前</span>
+                                <span className="font-bold text-slate-800">{bookingData.name}様</span>
+                            </div>
+                            {estimatedTotal && (
+                                <div className="bg-blue-50 p-3 rounded-lg flex justify-between items-center text-blue-900 font-bold">
+                                    <span>概算見積</span>
+                                    <span>¥{estimatedTotal.toLocaleString()}~</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                            <Button
+                                variant="secondary"
+                                className="flex-1 font-bold"
+                                onClick={() => setConfirmModalOpen(false)}
+                                disabled={loading}
+                            >
+                                戻る
+                            </Button>
+                            <Button
+                                className="flex-1 bg-blue-600 text-white font-bold shadow-lg shadow-blue-200"
+                                onClick={handleQuickBook}
+                                disabled={loading}
+                            >
+                                {loading ? "予約中..." : "予約確定"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {!selectedTable && (
