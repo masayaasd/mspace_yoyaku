@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from "react";
-import { Card, Badge, Button } from "../components/UI";
+import { Card, Badge, Button, Input } from "../components/UI";
 import { api } from "../lib/api";
 import { useLIFF } from "../providers/LIFFProvider";
-import { Calendar, Clock, MapPin, ChevronRight } from "lucide-react";
+import { Calendar, Clock, MapPin, ChevronRight, Edit3, X } from "lucide-react";
 
 export const MyReservationsPage = () => {
     const { isReady } = useLIFF();
@@ -32,6 +32,63 @@ export const MyReservationsPage = () => {
     };
 
     const [selectedReservation, setSelectedReservation] = useState<any>(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editData, setEditData] = useState({
+        partySize: "",
+        startTime: "",
+        endTime: ""
+    });
+    const [saving, setSaving] = useState(false);
+
+    const openEditMode = () => {
+        if (!selectedReservation) return;
+        const start = new Date(selectedReservation.startTime);
+        const end = new Date(selectedReservation.endTime);
+        setEditData({
+            partySize: String(selectedReservation.partySize),
+            startTime: `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`,
+            endTime: `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`
+        });
+        setIsEditing(true);
+    };
+
+    const handleSaveEdit = async () => {
+        if (!selectedReservation) return;
+        setSaving(true);
+        try {
+            const originalStart = new Date(selectedReservation.startTime);
+            const originalEnd = new Date(selectedReservation.endTime);
+
+            const [sh, sm] = editData.startTime.split(':').map(Number);
+            const [eh, em] = editData.endTime.split(':').map(Number);
+
+            const newStart = new Date(originalStart);
+            newStart.setHours(sh, sm, 0, 0);
+
+            const newEnd = new Date(originalEnd);
+            newEnd.setHours(eh, em, 0, 0);
+
+            // Handle midnight crossing
+            if (newEnd <= newStart) {
+                newEnd.setDate(newEnd.getDate() + 1);
+            }
+
+            await api.put(`/api/reservations/${selectedReservation.id}`, {
+                partySize: Number(editData.partySize),
+                startTime: newStart.toISOString(),
+                endTime: newEnd.toISOString()
+            });
+
+            alert("予約を変更しました");
+            setIsEditing(false);
+            setSelectedReservation(null);
+            fetchMy();
+        } catch (e: any) {
+            alert("変更に失敗しました: " + (e.response?.data?.error || e.message));
+        } finally {
+            setSaving(false);
+        }
+    };
 
     const handleCancel = async (id: string) => {
         if (!window.confirm("予約をキャンセルしてもよろしいですか？")) return;
@@ -44,6 +101,16 @@ export const MyReservationsPage = () => {
             alert("キャンセルに失敗しました");
         }
     };
+
+    // Generate time slots for editing
+    const timeSlots = Array.from({ length: 48 }, (_, i) => {
+        const totalMinutes = (6 * 60) + (i * 30);
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+        const displayH = h >= 24 ? h - 24 : h;
+        const timeString = `${String(displayH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        return { value: timeString, label: timeString };
+    });
 
     return (
         <div className="space-y-6 pb-20">
@@ -58,7 +125,7 @@ export const MyReservationsPage = () => {
                         <Card
                             key={res.id}
                             className="relative overflow-hidden group active:scale-[0.98] transition-transform cursor-pointer"
-                            onClick={() => setSelectedReservation(res)}
+                            onClick={() => { setSelectedReservation(res); setIsEditing(false); }}
                         >
                             <div className="flex justify-between items-start mb-3">
                                 <Badge color={res.status === 'CONFIRMED' ? 'green' : (res.status === 'CANCELLED' ? 'red' : 'slate')}>
@@ -105,49 +172,119 @@ export const MyReservationsPage = () => {
                 )}
             </div>
 
-            {/* Detail Modal */}
+            {/* Detail / Edit Modal */}
             {selectedReservation && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedReservation(null)}>
-                    <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-xl space-y-6" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => { setSelectedReservation(null); setIsEditing(false); }}>
+                    <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-xl space-y-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                         <div className="text-center space-y-2 border-b border-slate-100 pb-4">
-                            <h3 className="text-xl font-black text-slate-800">予約詳細</h3>
+                            <h3 className="text-xl font-black text-slate-800">
+                                {isEditing ? "予約の変更" : "予約詳細"}
+                            </h3>
                             <Badge color={selectedReservation.status === 'CONFIRMED' ? 'green' : (selectedReservation.status === 'CANCELLED' ? 'red' : 'slate')}>
                                 {selectedReservation.status === 'CONFIRMED' ? '予約確定' : (selectedReservation.status === 'CANCELLED' ? 'キャンセル済' : selectedReservation.status)}
                             </Badge>
                         </div>
 
-                        <div className="space-y-4 text-sm">
-                            <div className="flex justify-between border-b border-slate-50 pb-2">
-                                <span className="text-slate-500 font-bold">日時</span>
-                                <span className="font-bold text-slate-800">
-                                    {new Date(selectedReservation.startTime).toLocaleDateString()} <br />
-                                    {formatTime(selectedReservation.startTime)} 〜 {formatTime(selectedReservation.endTime)}
-                                </span>
-                            </div>
-                            <div className="flex justify-between border-b border-slate-50 pb-2">
-                                <span className="text-slate-500 font-bold">テーブル</span>
-                                <span className="font-bold text-slate-800">{selectedReservation.table.name}</span>
-                            </div>
-                            <div className="flex justify-between border-b border-slate-50 pb-2">
-                                <span className="text-slate-500 font-bold">人数</span>
-                                <span className="font-bold text-slate-800">{selectedReservation.partySize}名</span>
-                            </div>
-                            {selectedReservation.notes && (
-                                <div className="space-y-1">
-                                    <span className="text-slate-500 font-bold block">メモ</span>
-                                    <p className="bg-slate-50 p-3 rounded-lg text-slate-600">{selectedReservation.notes}</p>
+                        {isEditing ? (
+                            /* Edit Form */
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-500">人数</label>
+                                    <Input
+                                        type="number"
+                                        value={editData.partySize}
+                                        onChange={(e: any) => setEditData({ ...editData, partySize: e.target.value })}
+                                        className="w-full"
+                                    />
                                 </div>
-                            )}
-                        </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500">開始時間</label>
+                                        <select
+                                            className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={editData.startTime}
+                                            onChange={(e) => setEditData({ ...editData, startTime: e.target.value })}
+                                        >
+                                            {timeSlots.map(t => (
+                                                <option key={t.value} value={t.value}>{t.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500">終了時間</label>
+                                        <select
+                                            className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={editData.endTime}
+                                            onChange={(e) => setEditData({ ...editData, endTime: e.target.value })}
+                                        >
+                                            {timeSlots.map(t => (
+                                                <option key={t.value} value={t.value}>{t.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-slate-400 text-center">
+                                    ※ テーブル・日付の変更はお店にお問い合わせください
+                                </p>
+                            </div>
+                        ) : (
+                            /* View Mode */
+                            <div className="space-y-4 text-sm">
+                                <div className="flex justify-between border-b border-slate-50 pb-2">
+                                    <span className="text-slate-500 font-bold">日時</span>
+                                    <span className="font-bold text-slate-800">
+                                        {new Date(selectedReservation.startTime).toLocaleDateString()} <br />
+                                        {formatTime(selectedReservation.startTime)} 〜 {formatTime(selectedReservation.endTime)}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between border-b border-slate-50 pb-2">
+                                    <span className="text-slate-500 font-bold">テーブル</span>
+                                    <span className="font-bold text-slate-800">{selectedReservation.table.name}</span>
+                                </div>
+                                <div className="flex justify-between border-b border-slate-50 pb-2">
+                                    <span className="text-slate-500 font-bold">人数</span>
+                                    <span className="font-bold text-slate-800">{selectedReservation.partySize}名</span>
+                                </div>
+                                {selectedReservation.notes && (
+                                    <div className="space-y-1">
+                                        <span className="text-slate-500 font-bold block">メモ</span>
+                                        <p className="bg-slate-50 p-3 rounded-lg text-slate-600">{selectedReservation.notes}</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
-                        <div className="flex gap-3">
-                            <Button variant="secondary" className="flex-1" onClick={() => setSelectedReservation(null)}>閉じる</Button>
-                            {selectedReservation.status === 'CONFIRMED' && (
-                                <Button className="flex-1 bg-red-600 text-white hover:bg-red-700 shadow-md shadow-red-200" onClick={() => handleCancel(selectedReservation.id)}>
-                                    キャンセル
+                        {/* Action Buttons */}
+                        {isEditing ? (
+                            <div className="flex gap-3">
+                                <Button variant="secondary" className="flex-1" onClick={() => setIsEditing(false)} disabled={saving}>
+                                    戻る
                                 </Button>
-                            )}
-                        </div>
+                                <Button className="flex-1 bg-blue-600 text-white" onClick={handleSaveEdit} disabled={saving}>
+                                    {saving ? "保存中..." : "変更を保存"}
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {selectedReservation.status === 'CONFIRMED' && (
+                                    <Button
+                                        variant="outline"
+                                        className="w-full flex items-center justify-center gap-2"
+                                        onClick={openEditMode}
+                                    >
+                                        <Edit3 size={16} /> 予約を変更
+                                    </Button>
+                                )}
+                                <div className="flex gap-3">
+                                    <Button variant="secondary" className="flex-1" onClick={() => setSelectedReservation(null)}>閉じる</Button>
+                                    {selectedReservation.status === 'CONFIRMED' && (
+                                        <Button className="flex-1 bg-red-600 text-white hover:bg-red-700 shadow-md shadow-red-200" onClick={() => handleCancel(selectedReservation.id)}>
+                                            キャンセル
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
