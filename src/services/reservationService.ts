@@ -133,9 +133,13 @@ async function getAvailability(tableId: string, start: Date, end: Date) {
 }
 
 async function listUserReservations(lineUserId: string): Promise<UserReservation[]> {
+  if (!lineUserId) {
+    console.warn("listUserReservations called with empty lineUserId");
+    return [];
+  }
   return prisma.reservation.findMany({
     where: {
-      lineUserId,
+      lineUserId: lineUserId, // Explicitly set
       status: { in: ["CONFIRMED", "PENDING", "CANCELLED"] },
     },
     orderBy: { startTime: "asc" },
