@@ -289,9 +289,7 @@ export const CreateReservation = () => {
                                         if (isTableAvailable(table)) {
                                             setSelectedTable(table);
                                             // Auto-set party size to min capacity if current is lower
-                                            if (Number(partySize) < table.capacityMin) {
-                                                setPartySize(table.capacityMin);
-                                            }
+                                            // Relaxed: Constraint removed
                                             setStep(3);
                                         } else {
                                             alert("この時間は予約済みです");
