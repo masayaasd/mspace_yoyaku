@@ -18,7 +18,7 @@ export const BookingPage = () => {
         endTime: "",
         partySize: "",
         tableId: null,
-        name: profile?.displayName || "",
+        name: localStorage.getItem("userName") || "",
         phone: localStorage.getItem("userPhone") || ""
     });
     const [loading, setLoading] = useState(false);
@@ -420,7 +420,10 @@ export const BookingPage = () => {
                                 <Input
                                     className="bg-slate-50 border-slate-200 h-12"
                                     value={bookingData.name}
-                                    onChange={(e: any) => setBookingData({ ...bookingData, name: e.target.value })}
+                                    onChange={(e: any) => {
+                                        setBookingData({ ...bookingData, name: e.target.value });
+                                        localStorage.setItem("userName", e.target.value);
+                                    }}
                                     placeholder="お名前を入力"
                                 />
                             </div>

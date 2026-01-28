@@ -213,7 +213,7 @@ export const TimelineModal = ({ table, reservations, onClose, onReservationClick
 
     // Filter reservations for this table
     const tableReservations = reservations
-        .filter((r: any) => r.tableId === table.id)
+        .filter((r: any) => r.tableId === table.id && r.status !== 'CANCELLED')
         .sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
     return (
