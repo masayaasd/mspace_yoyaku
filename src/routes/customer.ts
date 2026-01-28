@@ -143,6 +143,7 @@ router.get(
     }
 
     const reservations = await reservationService.listUserReservations(req.user.userLineId);
+    console.log(`[MyReservations] Fetched ${reservations.length} items for ${req.user.userLineId}`);
     res.json({ reservations });
   })
 );

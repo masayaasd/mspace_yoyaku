@@ -60,7 +60,7 @@ const TableNode = ({ table, style, label, status, reservations, conflictTime, ch
                 {label || table.name}
             </span>
 
-            <span className={`text-xs font-bold mt-0.5 ${textColor} bg-white/50 px-1 rounded`}>
+            <span className={`text-xs font-bold mt-0.5 ${textColor} bg-white/50 px-1 rounded text-center`}>
                 {getStatusText()}
             </span>
         </div>

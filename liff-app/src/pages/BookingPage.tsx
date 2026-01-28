@@ -19,7 +19,7 @@ export const BookingPage = () => {
         partySize: "",
         tableId: null,
         name: profile?.displayName || "",
-        phone: ""
+        phone: localStorage.getItem("userPhone") || ""
     });
     const [loading, setLoading] = useState(false);
 
@@ -430,7 +430,10 @@ export const BookingPage = () => {
                                     type="tel"
                                     className="bg-slate-50 border-slate-200 h-12"
                                     value={bookingData.phone}
-                                    onChange={(e: any) => setBookingData({ ...bookingData, phone: e.target.value })}
+                                    onChange={(e: any) => {
+                                        setBookingData({ ...bookingData, phone: e.target.value });
+                                        localStorage.setItem("userPhone", e.target.value);
+                                    }}
                                     placeholder="090-0000-0000"
                                 />
                             </div>
