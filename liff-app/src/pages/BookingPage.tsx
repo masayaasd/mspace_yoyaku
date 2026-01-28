@@ -67,6 +67,7 @@ export const BookingPage = () => {
 
             let occupiedCount = 0;
             reservations.forEach((r: any) => {
+                if (r.status === 'CANCELLED') return; // Skip cancelled reservations
                 const rStart = new Date(r.startTime);
                 const rEnd = new Date(r.endTime);
                 // Check if the slot's start time falls within an existing reservation
@@ -137,6 +138,7 @@ export const BookingPage = () => {
                 const blockedTableIds = new Set();
 
                 reservations.forEach((r: any) => {
+                    if (r.status === 'CANCELLED') return; // Skip cancelled reservations
                     const rStart = new Date(r.startTime);
                     const rEnd = new Date(r.endTime);
 
