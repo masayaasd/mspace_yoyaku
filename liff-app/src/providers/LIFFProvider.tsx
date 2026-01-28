@@ -76,6 +76,12 @@ export const LIFFProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         msg += `\n(${err.response.data.detail})`;
                     }
                 }
+                if (msg.includes("IdToken expired") || msg.includes("expired")) {
+                    console.warn("Token expired, forcing logout/refresh...");
+                    liff.logout();
+                    window.location.reload();
+                    return;
+                }
                 setError(msg);
             }
         };
