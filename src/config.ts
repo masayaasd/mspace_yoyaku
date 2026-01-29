@@ -22,6 +22,11 @@ export const config = {
     allowedOrigins: toArray(process.env.ALLOWED_ORIGINS),
   },
   scheduler: {
-    reminderCron: process.env.REMINDER_CRON ?? "0 10 * * *",
+    reminderCron: process.env.REMINDER_CRON ?? "0 12 * * *",
+  },
+  notification: {
+    adminLineUserId: process.env.ADMIN_LINE_USER_ID ?? "",
+    liffBaseUrl: process.env.LIFF_BASE_URL ?? "",
+    storePhone: process.env.STORE_PHONE ?? "070-8328-6648",
   },
 };

@@ -39,13 +39,13 @@ export const Layout = ({ children, onLogout, user }: any) => {
     }, []);
 
     const menuItems = [
-        { icon: <LayoutDashboard size={18} />, label: "Dashboard", path: "/" },
-        { icon: <Calendar size={18} />, label: "Reservations", path: "/reservations" },
-        { icon: <Database size={18} />, label: "Database", path: "/analysis" },
-        { icon: <TableIcon size={18} />, label: "Tables", path: "/tables" },
-        { icon: <Users size={18} />, label: "Customers", path: "/customers" },
-        { icon: <MessageSquare size={18} />, label: "Templates", path: "/templates" },
-        { icon: <Settings size={18} />, label: "Access Token", path: "/settings" },
+        { icon: <LayoutDashboard size={18} />, label: "ダッシュボード", path: "/" },
+        { icon: <Calendar size={18} />, label: "予約管理", path: "/reservations" },
+        { icon: <Database size={18} />, label: "データベース", path: "/analysis" },
+        { icon: <TableIcon size={18} />, label: "テーブル", path: "/tables" },
+        { icon: <Users size={18} />, label: "顧客", path: "/customers" },
+        { icon: <MessageSquare size={18} />, label: "通知設定", path: "/templates" },
+        { icon: <Settings size={18} />, label: "アクセストークン", path: "/settings" },
     ];
 
     const closeSidebarOnMobile = () => {

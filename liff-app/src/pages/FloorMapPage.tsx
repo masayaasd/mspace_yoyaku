@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import liff from "@line/liff";
 import { FloorMap } from "../components/FloorMap";
 import { Card, Button, Input, Badge } from "../components/UI";
 import { api } from "../lib/api";
@@ -96,7 +97,6 @@ export const FloorMapPage = () => {
             localStorage.setItem("userName", bookingData.name);
             localStorage.setItem("userPhone", bookingData.phone);
 
-            // Use /api/book (customer endpoint) to properly save lineUserId
             await api.post("/api/book", {
                 tableId: selectedTable.id,
                 name: bookingData.name,
@@ -105,6 +105,31 @@ export const FloorMapPage = () => {
                 startAt: start.toISOString(),
                 endAt: end.toISOString()
             });
+
+            // Send confirmation message to store Bot via LIFF
+            try {
+                if (liff.isInClient()) {
+                    const templateRes = await api.get("/api/templates/confirmation");
+                    const template = templateRes.data;
+                    if (template?.body) {
+                        // Format date and time
+                        const formatDate = (d: Date) => `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+                        const formatTime = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+                        // Replace template variables
+                        let message = template.body
+                            .replace(/\{\{customer_name\}\}/g, bookingData.name)
+                            .replace(/\{\{customer_phone\}\}/g, bookingData.phone)
+                            .replace(/\{\{reservation_date\}\}/g, formatDate(start))
+                            .replace(/\{\{reservation_time\}\}/g, formatTime(start));
+
+                        await liff.sendMessages([{ type: 'text', text: message }]);
+                    }
+                }
+            } catch (msgErr) {
+                console.warn("Failed to send confirmation message:", msgErr);
+            }
+
             alert("予約が完了しました！");
             setSelectedTable(null);
             setConfirmModalOpen(false);

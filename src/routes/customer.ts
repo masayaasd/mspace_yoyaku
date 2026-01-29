@@ -4,6 +4,9 @@ import { z } from "zod";
 import { requireAuth, type AuthenticatedRequest } from "../middleware/auth.js";
 import { tableService } from "../services/tableService.js";
 import { reservationService } from "../services/reservationService.js";
+import { notificationService } from "../services/notificationService.js";
+import { renderConfirmation } from "../services/templateService.js";
+import { logger } from "../lib/logger.js";
 
 const availabilityQuerySchema = z.object({
   date: z
@@ -117,6 +120,20 @@ router.post(
         lineUserId: req.user?.userLineId,
         status: "CONFIRMED",
       });
+
+      // テーブル情報を取得して確認通知を送信 (非同期、エラーは無視)
+      (async () => {
+        try {
+          const table = await tableService.getTableById(reservation.tableId);
+          if (table) {
+            const reservationWithTable = { ...reservation, table };
+            const message = await renderConfirmation(reservationWithTable);
+            await notificationService.sendConfirmation(reservation, message);
+          }
+        } catch (err) {
+          logger.error({ err, reservationId: reservation.id }, "Failed to send confirmation notification");
+        }
+      })();
 
       res.status(201).json({ reservation });
     } catch (error) {

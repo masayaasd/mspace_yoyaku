@@ -98,6 +98,75 @@ router.put(
   })
 );
 
+// Confirmation Template (for LIFF sendMessages)
+router.get(
+  "/templates/confirmation",
+  asyncHandler(async (_req, res) => {
+    const template = await prisma.notificationTemplate.findUnique({ where: { type: "CONFIRMATION" } });
+    // Return default if not found
+    if (!template) {
+      res.json({
+        title: "予約確認",
+        body: `次の内容で予約を承りました。
+ご来店お待ちしております。
+
+お名前：{{customer_name}}
+電話番号：{{customer_phone}}
+ご予約日：{{reservation_date}}
+ご予約時間：{{reservation_time}}`,
+        enabled: true
+      });
+      return;
+    }
+    res.json(template);
+  })
+);
+
+router.put(
+  "/templates/confirmation",
+  asyncHandler(async (req, res) => {
+    const parsed = templateSchema.parse(req.body);
+    const template = await prisma.notificationTemplate.upsert({
+      where: { type: "CONFIRMATION" },
+      update: parsed,
+      create: { ...parsed, type: "CONFIRMATION" },
+    });
+    res.json(template);
+  })
+);
+
+// Notification Settings (LIFF URL, Store Phone)
+router.get(
+  "/settings/notification",
+  asyncHandler(async (_req, res) => {
+    const liffUrl = await settingsService.getSetting("LIFF_BASE_URL");
+    const storePhone = await settingsService.getSetting("STORE_PHONE");
+    const adminLineUserId = await settingsService.getSetting("ADMIN_LINE_USER_ID");
+    res.json({
+      liffBaseUrl: liffUrl ?? "",
+      storePhone: storePhone ?? "070-8328-6648",
+      adminLineUserId: adminLineUserId ?? ""
+    });
+  })
+);
+
+router.put(
+  "/settings/notification",
+  asyncHandler(async (req, res) => {
+    const { liffBaseUrl, storePhone, adminLineUserId } = req.body;
+    if (typeof liffBaseUrl === "string") {
+      await settingsService.updateSetting("LIFF_BASE_URL", liffBaseUrl);
+    }
+    if (typeof storePhone === "string") {
+      await settingsService.updateSetting("STORE_PHONE", storePhone);
+    }
+    if (typeof adminLineUserId === "string") {
+      await settingsService.updateSetting("ADMIN_LINE_USER_ID", adminLineUserId);
+    }
+    res.json({ status: "success" });
+  })
+);
+
 // Settings
 router.get(
   "/settings",
@@ -179,4 +248,16 @@ router.get(
   })
 );
 
+// Test reminder endpoint
+router.post(
+  "/reminders/test",
+  asyncHandler(async (_req, res) => {
+    // Dynamic import to avoid circular dependency
+    const { scheduler } = await import("../scheduler/index.js");
+    await scheduler.runReminderOnce();
+    res.json({ status: "success", message: "Test reminders sent to tomorrow's reservations" });
+  })
+);
+
 export { router as adminRouter };
+

@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import liff from "@line/liff";
 import { FloorMap } from "../components/FloorMap";
 import { Card, Button, Input, Badge } from "../components/UI";
 import { api } from "../lib/api";
@@ -224,6 +225,32 @@ export const BookingPage = () => {
                 name: bookingData.name,
                 phone: bookingData.phone
             });
+
+            // Send confirmation message to store Bot via LIFF
+            try {
+                if (liff.isInClient()) {
+                    const templateRes = await api.get("/api/templates/confirmation");
+                    const template = templateRes.data;
+                    if (template?.body) {
+                        // Format date and time
+                        const formatDate = (d: Date) => `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+                        const formatTime = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+                        // Replace template variables
+                        let message = template.body
+                            .replace(/\{\{customer_name\}\}/g, bookingData.name)
+                            .replace(/\{\{customer_phone\}\}/g, bookingData.phone)
+                            .replace(/\{\{reservation_date\}\}/g, formatDate(start))
+                            .replace(/\{\{reservation_time\}\}/g, formatTime(start));
+
+                        await liff.sendMessages([{ type: 'text', text: message }]);
+                    }
+                }
+            } catch (msgErr) {
+                console.warn("Failed to send confirmation message:", msgErr);
+                // Don't block the flow if message sending fails
+            }
+
             setStep(4); // Success Step
         } catch (e: any) {
             alert("エラー: " + (e.response?.data?.error || e.message));

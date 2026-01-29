@@ -17,6 +17,7 @@ enum ReservationStatus {
 
 enum NotificationType {
   REMINDER
+  CONFIRMATION
 }
 
 model PokerTable {
