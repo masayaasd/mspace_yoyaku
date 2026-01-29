@@ -287,7 +287,8 @@ export const MyReservationsPage = () => {
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                {selectedReservation.status === 'CONFIRMED' && (
+                                {/* Only show edit/cancel for future reservations */}
+                                {selectedReservation.status === 'CONFIRMED' && new Date(selectedReservation.startTime) > new Date() && (
                                     <Button
                                         variant="outline"
                                         className="w-full flex items-center justify-center gap-2"
@@ -298,12 +299,15 @@ export const MyReservationsPage = () => {
                                 )}
                                 <div className="flex gap-3">
                                     <Button variant="secondary" className="flex-1" onClick={() => setSelectedReservation(null)}>閉じる</Button>
-                                    {selectedReservation.status === 'CONFIRMED' && (
+                                    {selectedReservation.status === 'CONFIRMED' && new Date(selectedReservation.startTime) > new Date() && (
                                         <Button className="flex-1 bg-red-600 text-white hover:bg-red-700 shadow-md shadow-red-200" onClick={() => handleCancel(selectedReservation.id)}>
                                             キャンセル
                                         </Button>
                                     )}
                                 </div>
+                                {selectedReservation.status === 'CONFIRMED' && new Date(selectedReservation.startTime) <= new Date() && (
+                                    <p className="text-xs text-slate-400 text-center">※ 過去の予約は変更・キャンセルできません</p>
+                                )}
                             </div>
                         )}
                     </div>

@@ -461,18 +461,15 @@ export const BookingPage = () => {
 
                     {/* Price Display */}
                     {bookingData.partySize && priceInfo ? (
-                        <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100 space-y-3 animate-in fade-in slide-in-from-bottom-2">
-                            <div className="flex justify-between items-end border-b border-blue-200 pb-3">
-                                <span className="text-sm font-bold text-blue-900 opacity-80">1人あたり</span>
-                                <span className="text-xl font-black text-blue-900">¥{Math.round(priceInfo.perPerson).toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between items-end">
+                        <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100 space-y-2 animate-in fade-in slide-in-from-bottom-2">
+                            <div className="flex justify-between items-center">
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-bold text-blue-900">想定合計金額</span>
-                                    {priceInfo.isVip && <span className="text-[10px] text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full w-fit">VIP料 +¥1,000/人 込</span>}
+                                    <span className="text-sm font-bold text-blue-900">お一人様</span>
+                                    {priceInfo.isVip && <span className="text-[10px] text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full w-fit">VIP料込</span>}
                                 </div>
-                                <span className="text-3xl font-black text-blue-900 tracking-tight">¥{priceInfo.total.toLocaleString()}</span>
+                                <span className="text-3xl font-black text-blue-900 tracking-tight">約 ¥{Math.round(priceInfo.perPerson).toLocaleString()}</span>
                             </div>
+                            <p className="text-[10px] text-blue-700 opacity-70">※チャージ料・VIP料含む</p>
                         </div>
                     ) : (
                         <div className="bg-slate-100 rounded-2xl p-6 text-center border-2 border-dashed border-slate-200 text-slate-400 text-sm font-medium">

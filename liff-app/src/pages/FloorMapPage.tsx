@@ -260,10 +260,10 @@ export const FloorMapPage = () => {
             Number(bookingData.partySize),
             selectedTable?.name === 'VIP' // Check name, not ID
         );
-        return p.totalAmount;
+        return Math.round(p.totalAmount / Number(bookingData.partySize));
     };
 
-    const estimatedTotal = getPrice();
+    const estimatedPerPerson = getPrice();
 
     return (
         <div className="space-y-6 pb-24">
@@ -377,13 +377,13 @@ export const FloorMapPage = () => {
                             </div>
 
                             {/* Price Estimation */}
-                            {estimatedTotal ? (
+                            {estimatedPerPerson ? (
                                 <div className="bg-blue-50 p-4 rounded-xl flex justify-between items-center text-blue-900 border border-blue-100 animate-in fade-in">
                                     <div className="flex flex-col">
-                                        <span className="text-xs font-bold opacity-80">想定合計金額</span>
+                                        <span className="text-xs font-bold opacity-80">お一人様</span>
                                         <span className="text-[10px] opacity-60">※チャージ料・VIP料含む</span>
                                     </div>
-                                    <span className="text-2xl font-black tracking-tight">¥{estimatedTotal.toLocaleString()}~</span>
+                                    <span className="text-2xl font-black tracking-tight">約 ¥{estimatedPerPerson.toLocaleString()}</span>
                                 </div>
                             ) : (
                                 <div className="bg-slate-100 rounded-xl p-4 text-center border-2 border-dashed border-slate-200 text-slate-400 text-xs font-medium">
@@ -432,10 +432,10 @@ export const FloorMapPage = () => {
                                 <span className="text-slate-500 font-bold">お名前</span>
                                 <span className="font-bold text-slate-800">{bookingData.name}様</span>
                             </div>
-                            {estimatedTotal && (
+                            {estimatedPerPerson && (
                                 <div className="bg-blue-50 p-3 rounded-lg flex justify-between items-center text-blue-900 font-bold">
-                                    <span>概算見積</span>
-                                    <span>¥{estimatedTotal.toLocaleString()}~</span>
+                                    <span>お一人様</span>
+                                    <span>約 ¥{estimatedPerPerson.toLocaleString()}</span>
                                 </div>
                             )}
                         </div>
