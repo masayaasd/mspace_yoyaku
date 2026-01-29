@@ -248,14 +248,52 @@ router.get(
   })
 );
 
-// Test reminder endpoint
+// Test reminder endpoint with detailed results
 router.post(
   "/reminders/test",
   asyncHandler(async (_req, res) => {
-    // Dynamic import to avoid circular dependency
-    const { scheduler } = await import("../scheduler/index.js");
-    await scheduler.runReminderOnce();
-    res.json({ status: "success", message: "Test reminders sent to tomorrow's reservations" });
+    const { reservationService } = await import("../services/reservationService.js");
+    const { notificationService } = await import("../services/notificationService.js");
+    const { renderReminder } = await import("../services/templateService.js");
+
+    // Get tomorrow's reservations
+    const now = new Date();
+    const start = new Date(now);
+    start.setDate(start.getDate() + 1);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setHours(23, 59, 59, 999);
+
+    const reservations = await reservationService.listReservations({ start, end, status: "CONFIRMED" });
+
+    const results: any[] = [];
+    for (const reservation of reservations) {
+      try {
+        const message = await renderReminder(reservation);
+        await notificationService.sendReminder(reservation, message);
+        results.push({
+          id: reservation.id,
+          customerName: reservation.customerName,
+          lineUserId: reservation.lineUserId ? "あり" : "なし",
+          status: "sent"
+        });
+      } catch (err: any) {
+        results.push({
+          id: reservation.id,
+          customerName: reservation.customerName,
+          lineUserId: reservation.lineUserId ? "あり" : "なし",
+          status: "failed",
+          error: err.message
+        });
+      }
+    }
+
+    res.json({
+      status: "success",
+      targetDate: start.toISOString().split('T')[0],
+      reservationCount: reservations.length,
+      results
+    });
   })
 );
 

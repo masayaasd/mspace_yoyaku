@@ -94,10 +94,19 @@ export const Templates = () => {
         if (!confirm("明日の予約があるお客様にリマインダーをテスト送信します。\nよろしいですか？")) return;
         setLoadingTest(true);
         try {
-            await axios.post(`${apiBase}/api/reminders/test`);
-            alert("テストリマインダーを送信しました");
-        } catch (err) {
-            alert("送信に失敗しました");
+            const res = await axios.post(`${apiBase}/api/reminders/test`);
+            const data = res.data;
+            let msg = `対象日: ${data.targetDate}\n予約件数: ${data.reservationCount}件\n\n`;
+            if (data.reservationCount === 0) {
+                msg += "明日の予約がありません。";
+            } else {
+                for (const r of data.results) {
+                    msg += `${r.customerName}: ${r.status === 'sent' ? '✅送信成功' : '❌失敗'} (LINE ID: ${r.lineUserId})${r.error ? ` - ${r.error}` : ''}\n`;
+                }
+            }
+            alert(msg);
+        } catch (err: any) {
+            alert("送信に失敗しました: " + (err.response?.data?.error || err.message));
         } finally {
             setLoadingTest(false);
         }
