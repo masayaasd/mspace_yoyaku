@@ -37,16 +37,18 @@ export const Templates = () => {
     const [loadingTest, setLoadingTest] = useState(false);
 
     useEffect(() => {
-        // Fetch all templates and settings
-        axios.get(`${apiBase}/api/templates/reminder`).then(res =>
-            setReminderTemplate(res.data || { title: "ご予約の前日リマインダー", body: DEFAULT_REMINDER_BODY, enabled: true })
-        );
-        axios.get(`${apiBase}/api/templates/confirmation`).then(res =>
-            setConfirmationTemplate(res.data || { title: "予約確認", body: DEFAULT_CONFIRMATION_BODY, enabled: true })
-        );
-        axios.get(`${apiBase}/api/settings/notification`).then(res =>
-            setNotificationSettings(res.data || { liffBaseUrl: "", storePhone: "070-8328-6648", adminLineUserId: "" })
-        );
+        // Fetch all templates and settings with error handling
+        axios.get(`${apiBase}/api/templates/reminder`)
+            .then(res => setReminderTemplate(res.data || { title: "ご予約の前日リマインダー", body: DEFAULT_REMINDER_BODY, enabled: true }))
+            .catch(() => setReminderTemplate({ title: "ご予約の前日リマインダー", body: DEFAULT_REMINDER_BODY, enabled: true }));
+
+        axios.get(`${apiBase}/api/templates/confirmation`)
+            .then(res => setConfirmationTemplate(res.data || { title: "予約確認", body: DEFAULT_CONFIRMATION_BODY, enabled: true }))
+            .catch(() => setConfirmationTemplate({ title: "予約確認", body: DEFAULT_CONFIRMATION_BODY, enabled: true }));
+
+        axios.get(`${apiBase}/api/settings/notification`)
+            .then(res => setNotificationSettings(res.data || { liffBaseUrl: "", storePhone: "070-8328-6648", adminLineUserId: "" }))
+            .catch(() => setNotificationSettings({ liffBaseUrl: "", storePhone: "070-8328-6648", adminLineUserId: "" }));
     }, []);
 
     const handleSaveReminder = async (e: React.FormEvent) => {
