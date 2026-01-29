@@ -35,10 +35,24 @@ const TableNode = ({ table, style, label, status, reservations, conflictTime, ch
 
                 if (upcoming.length > 0) {
                     const next = upcoming[0];
+                    const now = new Date();
+                    const tomorrow = new Date(now);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+
+                    const isToday = next.start.toDateString() === now.toDateString();
+                    const isTomorrow = next.start.toDateString() === tomorrow.toDateString();
+
                     const h = next.start.getHours();
                     const m = next.start.getMinutes();
                     const timeStr = `${h}:${String(m).padStart(2, '0')}`;
-                    return `空席(次${timeStr})`;
+
+                    if (isToday) {
+                        return `空席(次${timeStr})`;
+                    } else if (isTomorrow) {
+                        return `空席(翌${timeStr})`;
+                    }
+                    // Hide if after tomorrow
+                    return '空席';
                 }
             }
             return '空席';
