@@ -102,23 +102,29 @@ router.put(
 router.get(
   "/templates/confirmation",
   asyncHandler(async (_req, res) => {
-    const template = await prisma.notificationTemplate.findUnique({ where: { type: "CONFIRMATION" } });
-    // Return default if not found
-    if (!template) {
-      res.json({
-        title: "予約確認",
-        body: `次の内容で予約を承りました。
+    try {
+      const template = await prisma.notificationTemplate.findUnique({ where: { type: "CONFIRMATION" } });
+      if (template) {
+        res.json(template);
+        return;
+      }
+    } catch (err) {
+      console.error("Failed to fetch confirmation template:", err);
+      // Fallback to default
+    }
+
+    // Return default if not found or error
+    res.json({
+      title: "予約確認",
+      body: `次の内容で予約を承りました。
 ご来店お待ちしております。
 
 お名前：{{customer_name}}
 電話番号：{{customer_phone}}
 ご予約日：{{reservation_date}}
 ご予約時間：{{reservation_time}}`,
-        enabled: true
-      });
-      return;
-    }
-    res.json(template);
+      enabled: true
+    });
   })
 );
 

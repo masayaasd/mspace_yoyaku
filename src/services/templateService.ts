@@ -9,6 +9,7 @@ Handlebars.registerHelper("formatDateTime", (date: Date) => {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Asia/Tokyo",
   }).format(date);
 });
 
@@ -17,6 +18,7 @@ Handlebars.registerHelper("formatDate", (date: Date) => {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    timeZone: "Asia/Tokyo",
   }).format(date);
 });
 
@@ -24,6 +26,7 @@ Handlebars.registerHelper("formatTime", (date: Date) => {
   return new Intl.DateTimeFormat("ja-JP", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Asia/Tokyo",
   }).format(date);
 });
 
