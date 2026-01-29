@@ -151,7 +151,7 @@ export const FloorMap = ({ tables, reservations, onTableClick, selectedTableId, 
         { id: "T07_Label", isLabel: true, style: { top: "96%", left: "2%", width: "29%", height: "5%", fontSize: "11px", color: "#333", textAlign: "center" as const }, label: "(喫煙)" },
 
         // T08 (Bottom Center Smoking):
-        { id: "T08", style: { top: "75%", left: "33%", width: "30%", height: "20%", borderRadius: "4px" }, label: "4~6名" },
+        { id: "T08", style: { top: "75%", left: "33%", width: "30%", height: "20%", borderRadius: "4px" }, label: "4~6名(T08)" },
         { id: "T08_Label", isLabel: true, style: { top: "96%", left: "33%", width: "30%", height: "5%", fontSize: "11px", color: "#333", textAlign: "center" as const }, label: "(喫煙)" },
 
         // Reception Node (Visual)

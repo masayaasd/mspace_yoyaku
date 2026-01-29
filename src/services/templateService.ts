@@ -64,6 +64,20 @@ export async function renderReminder(reservation: {
   startTime: Date;
   table: { name: string };
 }) {
+  const getTableName = (name: string) => {
+    // Map internal table IDs to user-friendly labels matching FloorMap
+    if (name === "T01") return "9名卓(T01)";
+    if (name === "T02") return "9名卓(T02)";
+    if (name === "T03") return "6名卓(T03)";
+    if (name === "T04") return "9名卓(T04)";
+    if (name === "T05") return "6名卓(T05)";
+    if (name === "T06") return "6名卓(T06)";
+    if (name === "T07") return "6名卓(T07)";
+    if (name === "T08") return "4~6名(T08)";
+    if (name === "VIP") return "VIP";
+    return name;
+  };
+
   const template = await prisma.notificationTemplate.findUnique({
     where: { type: "REMINDER" },
   });
@@ -74,7 +88,7 @@ export async function renderReminder(reservation: {
     customer_name: reservation.customerName,
     reservation_date: reservation.startTime,
     reservation_time: reservation.startTime,
-    table_name: reservation.table.name,
+    table_name: getTableName(reservation.table.name),
     liff_url: config.notification.liffBaseUrl ? `${config.notification.liffBaseUrl}/mypage` : "",
     store_phone: config.notification.storePhone,
   });
@@ -87,6 +101,20 @@ export async function renderConfirmation(reservation: {
   startTime: Date;
   table: { name: string };
 }) {
+  const getTableName = (name: string) => {
+    // Map for consistency
+    if (name === "T01") return "9名卓(T01)";
+    if (name === "T02") return "9名卓(T02)";
+    if (name === "T03") return "6名卓(T03)";
+    if (name === "T04") return "9名卓(T04)";
+    if (name === "T05") return "6名卓(T05)";
+    if (name === "T06") return "6名卓(T06)";
+    if (name === "T07") return "6名卓(T07)";
+    if (name === "T08") return "4~6名(T08)";
+    if (name === "VIP") return "VIP";
+    return name;
+  };
+
   const template = await prisma.notificationTemplate.findUnique({
     where: { type: "CONFIRMATION" },
   });
@@ -98,7 +126,7 @@ export async function renderConfirmation(reservation: {
     customer_phone: reservation.customerPhone,
     reservation_date: reservation.startTime,
     reservation_time: reservation.startTime,
-    table_name: reservation.table.name,
+    table_name: getTableName(reservation.table.name),
   });
 }
 
