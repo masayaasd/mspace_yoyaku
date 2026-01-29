@@ -126,8 +126,9 @@ export const FloorMapPage = () => {
                         await liff.sendMessages([{ type: 'text', text: message }]);
                     }
                 }
-            } catch (msgErr) {
+            } catch (msgErr: any) {
                 console.warn("Failed to send confirmation message:", msgErr);
+                alert("確認メッセージの送信に失敗しました。\n" + (msgErr.message || JSON.stringify(msgErr)));
             }
 
             alert("予約が完了しました！");

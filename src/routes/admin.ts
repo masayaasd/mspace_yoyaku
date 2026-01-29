@@ -256,13 +256,23 @@ router.post(
     const { notificationService } = await import("../services/notificationService.js");
     const { renderReminder } = await import("../services/templateService.js");
 
-    // Get tomorrow's reservations
+    // Calculate Tomorrow in JST
     const now = new Date();
-    const start = new Date(now);
-    start.setDate(start.getDate() + 1);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setHours(23, 59, 59, 999);
+    // Assuming server is UTC, add 9 hours to get JST equivalent time
+    const jstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    const jstTomorrow = new Date(jstNow);
+    jstTomorrow.setDate(jstTomorrow.getDate() + 1);
+    jstTomorrow.setHours(0, 0, 0, 0); // JST Tomorrow 00:00
+
+    const start = new Date(jstTomorrow.getTime() - 9 * 60 * 60 * 1000); // Back to UTC
+    const end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1);    // Back to UTC end of day
+
+    const debugInfo = {
+      serverTime: now.toISOString(),
+      jstTomorrow: jstTomorrow.toISOString(),
+      searchStartUTC: start.toISOString(),
+      searchEndUTC: end.toISOString()
+    };
 
     const reservations = await reservationService.listReservations({ start, end, status: "CONFIRMED" });
 

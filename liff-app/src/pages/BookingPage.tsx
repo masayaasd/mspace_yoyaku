@@ -246,9 +246,9 @@ export const BookingPage = () => {
                         await liff.sendMessages([{ type: 'text', text: message }]);
                     }
                 }
-            } catch (msgErr) {
+            } catch (msgErr: any) {
                 console.warn("Failed to send confirmation message:", msgErr);
-                // Don't block the flow if message sending fails
+                alert("確認メッセージの送信に失敗しました。\n" + (msgErr.message || JSON.stringify(msgErr)));
             }
 
             setStep(4); // Success Step
